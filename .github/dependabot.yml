@@ -1,0 +1,29 @@
+# Dependabot – automatische Abhängigkeits-Updates
+# Zweck: Sobald Module Manifest-Dateien (package.json, requirements.txt, ...) haben,
+# werden Updates hierüber vorgeschlagen. Ecosystems ohne Manifest bleiben wirkungslos.
+version: 2
+updates:
+  - package-ecosystem: "npm" # S-A (Tauri), S-D
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "nuget" # S-A / S-B (.NET)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip" # S-C / S-E (Python)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod" # S-C / S-E (Go)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo" # S-A / S-B (Rust/Tauri)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

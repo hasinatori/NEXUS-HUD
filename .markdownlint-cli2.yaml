@@ -1,0 +1,7 @@
+# Zweck: Lockerung der Markdown-Regeln für projekttypische Inhalte.
+# MD013 – lange Zeilen (Tabellen, Beschreibungen)
+# MD033 – inline-HTML (Zweck-Kommentare <!-- -->)
+config:
+  default: true
+  MD013: false
+  MD033: false

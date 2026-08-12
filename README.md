@@ -1,250 +1,166 @@
-# NEXUS-HUD
+# NEXUS HUD — Desktop Command Center
 
-# NEXUS HUD — Architektur
-
-> Technische Spec zum Projekt aus `README.txt`. Stand: **V 1.0.0-1** — kein Code vorhanden.
-
----
-
-## 1. Überblick & Ziele
-
-NEXUS HUD verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einem Desktop-HUD auf dem Sekundärmonitor.
-
-**Ziele**
-* Leichtgewichtig: flüssige UI bei niedriger CPU-Last, Gesamt-RAM-Budget **< 150 MB**.
-* Entkoppelt: Module laufen als eigenständige Services, Fail fast ohne Gesamtausfall.
-* Lokal & privat: keine Cloud-Pflicht für die Kernfunktionen.
-
-**Non-Goals (bewusst nicht im Scope)**
-* Kein Multi-User-/Multi-Maschinen-Sync, keine zentrale Cloud-Konsole.
-* Kein general-purpose Browser oder Editor-Ersatz.
-* Keine Plattform-Anbindungen, die ToS oder lokale APIs verletzen (Risiken: Abschnitt 8).
-
-**Zielplattform:** Windows (Overlay, Global Hotkeys, Win32 API). Dev-Umgebung kann ChromeOS-Crostini (Debian) sein — dort nur Code/Test, kein Overlay-Betrieb.
+> **Das ultimative Overlay & Dashboard auf dem 2. Monitor für Devs, Gamer & Power-User.**
+> *Kein trockenes Office-Tool, sondern eine Performance-Engine für Automation, Shortcuts & System-Monitoring.*
 
 ---
 
-## 2. System-Übersicht
+## Projekt-Übersicht
 
-```
-                    +-----------------------------------------------------+
-                    |                     NEXUS HUD                        |
-                    |                                                      |
-   +-----------+    |   +----------+     +-----------+    +-------------+  |
-   |  S-A      |<------>|          |<--->|  S-C      |    |  S-D        |  |
-   | UI Shell  |    |   |          |     | Automation|    | Integrations|  |
-   | (WinUI 3/ |    |   |  IPC-Bus |<--->| Engine    |    | (Spotify,   |  |
-   |  WPF/Tauri|    |   |          |     +-----------+    |  Discord,   |  |
-   +-----------+    |   |          |<--->+-------------+  |  WhatsApp)  |  |
-   +-----------+    |   |          |     |  S-B        |  +-------------+  |
-   | Hotkeys / |<------>|          |<--->|  Macro &    |                   |
-   | Prozesse  |    |   +----------+     |  Launchpad  |                   |
-   | (Userland)|    |                    +-------------+                   |
-   +-----------+    |   +-------------+                                    |
-                    |   |  S-E        |                                    |
-                    |   | Coding/Build|                                    |
-                    |   | Monitor     |                                    |
-                    |   +-------------+                                    |
-                    +-----------------------------------------------------+
-        (Alle Pfeile = lokale Kommunikation über den IPC-Bus)
-```
+NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-**Prinzipien**
-* Die **UI (S-A)** ist reine Zustands-Darstellung — keine Geschäftslogik, keine direkten OS-/API-Zugriffe.
-* Jeder Service (S-B…S-E) ist unabhängig startbar; Ausfall eines Services degradiert, crasht aber nie die UI.
-* Zentraler **IPC-Bus** (Abschnitt 3) entkoppelt Sender und Empfänger; Module kennen sich nicht gegenseitig.
+> **Status:** Reine Planung. Noch kein Code geschrieben. Alle nachfolgenden Wegpunkte sind offen.
+
+### Kern-Features
+* **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
+* **Visual Automation Engine:** Hintergrund-Tasks, File-Watcher und Skripte ohne Cloud-Zwang ausführen.
+* **Unified Control Hub:** Spotify, Discord, WhatsApp & System-Stats an einem Ort.
+* **Dev & Build Monitor:** Git-Status, CI/CD-Pipelines und IDE-Builds auf einen Blick.
+
+### Zielplattform
+* Windows (Overlay, Global Hotkeys, Win32 API).
+* Entwicklung auf ChromeOS-Crostini (Debian) möglich — dort nur reine Coding-/Test-Umgebung, kein Overlay-Test.
 
 ---
 
-## 3. Kommunikation & IPC
+## Architektur & Tech-Stack Spec
 
-### 3.1 Transport
+Um maximale Performance und eine flüssige UI bei geringer CPU-Last zu garantieren, nutzen wir eine **entkoppelte Micro-Services / Modular-Architektur**.
 
-| Transport | Rolle | Begründung |
-| :--- | :--- | :--- |
-| **Named Pipes** | Primär (Windows) | Nativer Windows-IPC, schnell, keine Port-Kollisionen, Zugriffskontrolle über DACL. |
-| **Local WebSocket** (127.0.0.1) | Fallback & Debugging | Einfach in Node/Go/Python zu nutzen, JSON-nativ, gut testbar. |
+Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über **Named Pipes** oder **Local WebSockets (JSON-RPC)**. Details siehe [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-* Named Pipe-Name: `\\.\pipe\nexus-hud`
-* WebSocket-Endpoint: `ws://127.0.0.1:<port>/` (Port konfigurierbar, Standard z.B. 49152–49162-Bereich).
-
-### 3.2 Protokoll: JSON-RPC 2.0
-
-Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "msg-<uuid>",
-  "method": "event.system.metrics",
-  "params": {
-    "source": "S-E",
-    "cpu": 34.2,
-    "ram": { "used_mb": 6400, "total_mb": 16384 },
-    "gpu_temp_c": 61
-  }
-}
-```
-
-* **Requests** (`id` gesetzt) — Aufruf mit Antwort.
-* **Notifications** (`id` fehlt) — Feuer-und-vergessen, Standard für Events.
-* **Konvention:** Methodennamen als `event.<domain>.<action>` bzw. `cmd.<domain>.<action>`.
-
-### 3.3 Event-Katalog (Standard-Schema)
-
-| Event | Richtung | Bedeutung |
-| :--- | :--- | :--- |
-| `event.system.hello` | Service → UI | Service ist gestartet (Handshake nach Connect). |
-| `event.system.heartbeat` | Service → UI | Lebendig-Meldung (Interval, z.B. 15 s). |
-| `event.system.metrics` | S-E → UI | CPU/RAM/GPU-Metriken. |
-| `event.build.failed` | S-E → UI | Build-Fehler erkannt. |
-| `event.build.succeeded` | S-E → UI | Build erfolgreich. |
-| `event.git.status` | S-E → UI | Branch/Uncommitted/Push-Status. |
-| `event.media.state` | S-D → UI | Track, Album-Art, Play/Pause, Lautstärke. |
-| `event.presence.changed` | S-D → UI | Discord/WhatsApp-Status-Trigger. |
-| `event.profile.switched` | IPC-Bus → alle | Context-Profile gewechselt (Dev/Gaming/AFK). |
-| `cmd.media.toggle` | UI → S-D | Play/Pause-Kommando. |
-| `cmd.app.launch` | UI → S-B | Programm/Spiel starten oder fokussieren. |
-| `cmd.hotkey.register` | UI → S-B | Globalen Hotkey registrieren. |
-| `cmd.automation.run` | UI → S-C | Automation/Task starten. |
-
-**Hello-World-Definition (Phase 1):** Jeder Service sendet nach Connect
-`event.system.hello` mit `{ "source": "S-B", "version": "0.1.0" }` — die UI zeigt dies als Status-Badge an.
+| Modul | Bereich | Empfohlener Tech-Stack | Grund für die Wahl |
+| :--- | :--- | :--- | :--- |
+| **S-A** | **Frontend / UI Shell** | **C# (.NET 8 + WinUI 3 / WPF)** oder **Tauri (Rust + React)** | Native Windows-UI, GPU-Beschleunigung, frameless Window-Support. |
+| **S-B** | **Macro- & Launchpad-System** | **C# / Rust** | Tiefe OS-Integration (Global Hotkeys, Process Manager, Win32 API). |
+| **S-C** | **Automation Engine** | **Go (Golang) / Python** | Extrem schnelle, nebenläufige Task-Ausführung, geringer RAM-Verbrauch. |
+| **S-D** | **API Integrations** | **TypeScript / Node.js** | Perfekt für Async-Netzwerk-Requests, OAuth2 & WebSocket-Clients. |
+| **S-E** | **Coding- & Build-Monitor** | **Go / Python** | Schnelles Log-Parsing, File-System Watching & Git-Cli Interfacing. |
 
 ---
 
-## 4. Security
+### S-A: Frontend & UI-Shell
 
-* **Bind nur auf Loopback:** Named Pipes lokal bzw. WebSocket nur auf `127.0.0.1` — niemals auf `0.0.0.0`/`::`.
-* **Origin-Check (WebSocket):** Server validiert `Origin`-Header; nur lokale UI-Origin wird akzeptiert (Schutz vor Browser-CSRF/XSS).
-* **Auth-Token:** Pro Sitzung generiertes Token (in Pipe-/WS-Connect-Handshake ausgetauscht) verhindert Fremd-Clients.
-* **Pipe-DACL:** Named Pipe wird mit restriktiver Zugriffssteuerung erstellt (nur aktueller User).
-* **Eingangsvalidierung:** Alle Events werden gegen das JSON-Schema validiert, bevor sie weitergegeben werden; unbekannte Methoden werden verworfen.
-* **Keine Secrets im Klartext:** OAuth2-Tokens (S-D) verschlüsselt im User-Profil speichern (Windows DPAPI bzw. `keytar`).
-
----
-
-## 5. Module (S-A bis S-E)
-
-Technologie je Modul wie in `README.txt` spezifiziert (inkl. Alternativen).
-
-### S-A — Frontend / UI Shell
-* **Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
-* **Verantwortung:** Frameless Overlay, Grid-Layout, Widget-Bibliothek, Darstellung aller Events.
-* **Sendet:** `cmd.*` (Hotkeys, Launch, Automation, Media).
-* **Empfängt:** alle `event.*`-Notifications.
-
-### S-B — Macro- & Launchpad-System
-* **Stack:** `C# / C++ / Rust`
-* **Verantwortung:** Global Hotkeys, Process Launcher, Window Manager, Clipboard-Manager.
-* **Sendet:** `event.hotkey.triggered`, `event.process.started`, `event.window.moved`.
-* **Empfängt:** `cmd.hotkey.register`, `cmd.app.launch`, `cmd.window.move`.
-
-### S-C — Automation Engine
-* **Stack:** `Go` oder `Node.js / Python`
-* **Verantwortung:** File-Watcher, Task-Runner, IF-THIS-THEN-THAT-Regel-Engine.
-* **Sendet:** `event.automation.started`, `event.automation.finished`, `event.file.changed`.
-* **Empfängt:** `cmd.automation.run`, `event.profile.switched` (aktive Regeln je Profil).
-
-### S-D — Integrated Apps
-* **Stack:** `Node.js / TypeScript`
-* **Verantwortung:** Spotify, Discord, WhatsApp → Unified-Events.
-* **Sendet:** `event.media.state`, `event.presence.changed`.
-* **Empfängt:** `cmd.media.toggle`, `cmd.media.next`, `cmd.media.volume`.
-
-### S-E — Coding & Build Monitoring
-* **Stack:** `Go` oder `Python`
-* **Verantwortung:** Git-Watcher, Build-Log-Parser, System-Metriken, IDE-Status.
-* **Sendet:** `event.system.metrics`, `event.git.status`, `event.build.failed`, `event.build.succeeded`, `event.ide.focus`.
-* **Empfängt:** `cmd.metrics.set_interval`, `cmd.git.watch` (Pfad registrieren).
+* **Lead:** Developer A
+* **Tech-Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
+* **Hauptaufgaben:**
+  * [ ] Erstellung des Hauptfensters (Frameless Overlay, Snapping für 2. Monitor).
+  * [ ] Dark-Mode / Cyberpunk UI Design & Grid Layout.
+  * [ ] Komponenten-Bibliothek für Widgets (Gauges, Knöpfe, Status-Badges).
+  * [ ] Anbindung der lokalen WebSocket/Named-Pipe-Schnittstelle zum Empfang von Events.
+* **Deliverable:** Eine voll bedienbare UI, die Daten via JSON entgegennimmt und darstellt.
 
 ---
 
-## 6. Cross-Module-Beispiel
+### S-B: Macro- & Launchpad-System
 
-**Szenario "Build Failed → Sound → UI-Flash" (Phase 3):**
-
-```
-S-E  Build-Log-Parser erkennt "Build Failed"
-  └── event.build.failed  → IPC-Bus
-        ├── S-A  → UI flasht rot (Widget "Build")
-        └── S-D  → spielt kurzen Warnton ab (lokaler Sound, kein Spotify)
-```
-
-**Regelwerk (S-C):** Der eigentliche Trigger-Logik liegt als Automation-Regel vor:
-`IF event.build.failed AND profile=Dev THEN (flash UI) + (play sound)`.
-S-C wertet Events aus und stößt Aktionen an — Module bleiben entkoppelt.
+* **Lead:** Developer B
+* **Tech-Stack:** `C# / C++ / Rust`
+* **Hauptaufgaben:**
+  * [ ] Global Hotkey Listener (Reagiert auch im Spiel/IDE auf Tastenkombinationen).
+  * [ ] Process Launcher (Programme/Spiele fokussieren, starten oder beenden).
+  * [ ] Window Manager (Fenster per Script auf bestimmte Monitore & Positionen schieben).
+  * [ ] Clipboard-Manager (Historie verwalten, Code-Snippets abgreifen).
+* **Deliverable:** Ein OS-Service, der Prozesse steuern und Shortcuts systemweit abfangen kann.
 
 ---
 
-## 7. Context Profiles
+### S-C: Automation Engine
 
-| Profil | UI | Hotkeys (S-B) | Hintergrund-Tasks (S-C) | Beispiele |
-| :--- | :--- | :--- | :--- | :--- |
-| **Dev Mode** | Git/Build-Widgets im Fokus | Editor-Shortcuts | Build-Pipelines, Watcher aktiv | VS Code, Terminal |
-| **Gaming Mode** | HUD reduziert, minimale Overlays | Game-Specific Keys | Performance-Logging | Steam, Spiele |
-| **AFK/Focus Mode** | Ausgeblendet, Nur-Störungsmelder | Pause-Stummschaltung | Media-Auto-Pause | Nichtstun/Fokus |
-
-* **Auslöser:** Globaler Hotkey (S-B) → Event `event.profile.switched` → jeder Service reagiert eigenständig.
-
----
-
-## 8. RAM-Budget (Realistisch)
-
-Ziel < 150 MB Gesamtverbrauch. Realistische Schätzung je Runtime:
-
-| Komponente | Ungefährer Speicher | Hinweis |
-| :--- | :--- | :--- |
-| UI S-A (WinUI 3 / WPF / Tauri) | 40–80 MB | Frameless Overlay + Widgets |
-| S-B (C#/Rust, Service) | 10–30 MB | Rust sparsamer als C# |
-| S-C (Go) | 10–15 MB | Go sehr leicht |
-| S-D (Node.js) | 40–80 MB | Node-Basis ist der größte Block |
-| S-E (Go/Python) | 10–30 MB | Python ~30 MB, Go ~10 MB |
-| **Summe** | **110–235 MB** | **< 150 MB nur bei sparsamer Kombination** |
-
-**Konsequenz:** Das <150-MB-Ziel ist mit einem Node.js-Service **und** C#-UI **und** Python-Service nicht garantiert. Optionen: Node durch Go/Deno ersetzen, UI in Tauri (Rust) statt WinUI, Metriken nur auf Anforderung statt Dauer-Polling. Das Ziel bleibt Wunschvorgabe, wird aber in Phase 3 mit echten Messungen verifiziert.
+* **Lead:** Developer C
+* **Tech-Stack:** `Go (Golang)` oder `Node.js / Python`
+* **Hauptaufgaben:**
+  * [ ] **File-Watcher System:** Überwachung von Ordnern (z.B. Downloads, Screenshots) auf Datei-Änderungen.
+  * [ ] **Task-Runner Engine:** Ausführen lokaler Aktionen (z.B. Dateien konvertieren, Skripte triggern, Aufräum-Pipelines).
+  * [ ] **Node/Workflow Engine Parser:** Logik zur Verarbeitung einfacher "IF THIS THEN THAT"-Regeln.
+* **Deliverable:** Ein autonomer Hintergrund-Dienst, der Custom-Automationen ausführt.
 
 ---
 
-## 9. Risiken & Offene Punkte
+### S-D: Integrated Apps (Spotify, Discord, WhatsApp)
 
-| Risiko | Details | Mitigation |
-| :--- | :--- | :--- |
-| **Spotify-Lautstärke** | Web API unterstützt keine Volume-Steuerung. | Lokale Spotify-Instanz-API / Spotify-Connect; Volume-Widget nur anzeigen. |
-| **WhatsApp-Web-Automation** | ToS-Risiko, fragile DOM-Selektoren. | Nur Push-Benachrichtigungen via offiziellen Webhooks; Automations-Teil optional (Feature-Flag). |
-| **Discord-Bot** | Self-Bot verstößt gegen Discord-ToS. | Nur offizielle Bot-API (User-Account-Features vermeiden). |
-| **Toolchain-Pflege (5 Stacks)** | 5 Sprachen = 5 Build-Systeme + Dependencies. | Module so klein halten, dass Abhängigkeiten minimal bleiben; Fix auf ein Tool-Doku (dieses File). |
-| **Overlay-Test auf Crostini** | Linux/Wayland ≠ Windows-Overlay. | Overlay-Tests nur auf Windows-Zielgerät; Crostini nur für Service-Unit-Tests. |
-| **JSON-Schema-Drift** | Events divergieren zwischen Modulen. | Zentrales Schema-Verzeichnis im Repo + Validierung beim Start (Phase 1). |
+* **Lead:** Developer D
+* **Tech-Stack:** `Node.js / TypeScript`
+* **Hauptaufgaben:**
+  * [ ] **Spotify Service:** OAuth2 Auth, Play/Pause, Track-Name, Album-Art & Lautstärke via Spotify Web API.
+  * [ ] **Discord Rich Presence & Bot Service:** Status-Updates und Abfangen bestimmter Trigger-Words.
+  * [ ] **WhatsApp Webhook / Web-Automation:** Push-Benachrichtigungen bei bestimmten Kontakten/Wörtern auf das HUD weiterleiten.
+* **Deliverable:** Ein Unified-API-Module, das Events von Drittanbieter-Services in das NEXUS HUD einspeist.
 
----
-
-## 10. Roadmap-Detail (12 Wochen)
-
-Siehe `README.txt` für den Überblick. Hier die technischen Deliverables:
-
-**Phase 1 (Woche 1–3): Grundgerüst & IPC**
-- Repo-Struktur, CI (Build je Modul), JSON-Schema-Verzeichnis.
-- S-A: Fenster auf Bildschirm (Skeleton, Dark-Theme-Basis).
-- S-B–S-E: Je ein Service mit `event.system.hello`-Handshake.
-
-**Phase 2 (Woche 4–7): Kernfeatures isoliert**
-- S-A: konfigurierbares Dashboard-Grid.
-- S-B: Launcher + erste Global Hotkeys.
-- S-C: ein stabiler File-Watcher mit Regel.
-- S-D: Spotify Play/Pause + Track-Info.
-- S-E: CPU/RAM-Metriken + Git-Status-Anzeige.
-
-**Phase 3 (Woche 8–10): Integration & Polish**
-- `event.profile.switched` über den Bus wirksam.
-- Cross-Module-Automation (Abschnitt 6).
-- RAM-Messung und Optimierung gegen das <150-MB-Budget.
-
-**Phase 4 (Woche 11–12): Testing & Dogfooding**
-- Bugfixes, UX-Feintuning.
-- Installer/Packaging (InnoSetup bzw. Tauri-Bundler).
-- v1.0 Release.
+> **Hinweis:** Spotify-Lautstärke ist über die Web API nicht direkt steuerbar (nur über lokale Spotify-Instanz/Desktop-Client). WhatsApp-Web-Automation und Discord-Bots unterliegen ToS-Risiken. Siehe Risiken in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
-*Ergänzungen/Änderungen an dieser Spec gehen über die Module-Sektionen — das JSON-Schema in Abschnitt 3 ist die single source of truth für die IPC-Verträge.*
+### S-E: Coding & Build Monitoring
+
+* **Lead:** Developer E
+* **Tech-Stack:** `Go` oder `Python`
+* **Hauptaufgaben:**
+  * [ ] **Local Git Watcher:** Auslesen von aktuellem Branch, Uncommitted Changes & Push-Status im Projektordner.
+  * [ ] **Build-Log Parser:** Überwacht Compiler-Ausgaben / Terminals und schickt bei Errors ("Build Failed") ein Event an die UI.
+  * [ ] **System-Metrics Gatherer:** Auslesen von CPU-Auslastung, RAM-Verbrauch, GPU-Temp via OS APIs.
+  * [ ] Simple IDE-Plugin (z.B. für VS Code) zur Übertragung des aktuellen Focus/Status.
+* **Deliverable:** Ein Developer-Service, der den Arbeits- und Systemzustand in Echtzeit meldet.
+
+---
+
+## Roadmap & Meilensteine (12-Wochen-Plan)
+
+> Alle Punkte sind offen — das Projekt befindet sich in der Planungsphase.
+
+### Phase 1: Core Setup & Inter-Process Communication (Woche 1–3)
+* **Ziel:** Alle Architekturgrundlagen stehen, Module können miteinander sprechen.
+* **Waypoints:**
+  * [ ] Repo-Setup & Definition des IPC-Protokolls (JSON Schema für Events).
+  * [ ] **S-A:** Skeleton-UI steht auf dem Screen.
+  * [ ] **S-B bis S-E:** Grundlegende Services senden "Hello World"-Ping an die UI.
+
+### Phase 2: Core Functionality (Woche 4–7)
+* **Ziel:** Die wichtigsten Einzel-Features laufen isoliert.
+* **Waypoints:**
+  * [ ] **S-A:** Dashboard-Grid lässt sich konfigurieren.
+  * [ ] **S-B:** App-Launcher & Global Hotkeys funktionieren.
+  * [ ] **S-C:** Erste File-Watcher-Automatisierung läuft stabil.
+  * [ ] **S-D:** Spotify-Steuerung ist voll funktionsfähig.
+  * [ ] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
+
+### Phase 3: Integration & Polish (Woche 8–10)
+* **Ziel:** Die Module greifen ineinander (Context-Switching & Triggerevents).
+* **Waypoints:**
+  * [ ] Profil-Switching: Hotkey schaltet UI + Apps + Hintergrund-Tasks gleichzeitig um.
+  * [ ] Cross-Module Automation (z. B. *Build Failed in S-E* -> *Spiele Sound über S-D* -> *Flashe UI in S-A*).
+  * [ ] Performance-Optimierung (RAM-Budget der Gesamtanwendung < 150 MB).
+
+### Phase 4: Testing & Dogfooding (Woche 11–12)
+* **Ziel:** Das Team nutzt das Tool täglich selbst zum Weiter-Coden.
+* **Waypoints:**
+  * [ ] Bugfixing & UI/UX Fine-tuning.
+  * [ ] Installer / Binary-Packaging (z. B. via InnoSetup oder Tauri Bundler).
+  * [ ] v1.0 Release.
+
+---
+
+## Getting Started
+
+### Voraussetzungen (Windows-Dev)
+Je nach umgesetztem Modul:
+
+| Modul | Benötigte Toolchain |
+| :--- | :--- |
+| **S-A / S-B** | .NET 8 SDK (WinUI 3/WPF) bzw. Rust + Node.js 20+ (Tauri) |
+| **S-C / S-E** | Go 1.22+ bzw. Python 3.11+ |
+| **S-D** | Node.js 20+ |
+
+### Repo-Setup
+1. Repository klonen bzw. initialisieren.
+2. Je Modul Toolchain installieren (siehe Tabelle oben).
+3. IPC-Protokoll-Schema aus `ARCHITECTURE.md` als JSON-Schema übernehmen.
+4. Modul-Skeletons starten und ersten "Hello World"-Ping an die UI senden.
+
+### Dokumente
+* **README.md** — Projektübersicht, Module, Roadmap (diese Datei).
+* **ARCHITECTURE.md** — Technische Spec: IPC, Event-Schema, Security, RAM-Budget.
+* **CONTRIBUTING.md** — Regeln für Beiträge (Issues, PRs, CI-Pflichten).
+* **SECURITY.md** — Sicherheitsrichtlinie und Meldeprozess.
+* **CHANGELOG.md** — Änderungshistorie.
+* **LICENSE** — MIT-Lizenz.

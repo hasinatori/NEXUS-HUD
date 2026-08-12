@@ -1,0 +1,6 @@
+# Zweck: Steuerung der Issue-Erstellung (leere Issues erlauben).
+blank_issues_enabled: true
+contact_links:
+  - name: Sicherheitsmeldungen
+    url: https://github.com/hasinatori/NEXUS-HUD/security
+    about: Sicherheitsprobleme bitte nicht als öffentliches Issue, sondern über die Sicherheitsrichtlinie melden (SECURITY.md).

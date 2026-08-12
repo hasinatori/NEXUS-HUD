@@ -1,0 +1,48 @@
+# Zweck: Basis-CI für das NEXUS HUD. Hält die Doku und Projektstruktur grün,
+# bis die Module echten Code mit eigenen Pipelines haben.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  markdownlint:
+    name: Markdown-Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v19
+
+  check-schema:
+    name: Schema-Validierung
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: JSON-Schema validieren
+        run: python -c "import json,glob; [json.load(open(f)) for f in glob.glob('schema/*.json')]; print('Alle JSON-Dateien in schema/ sind gültig.')"
+
+  structure-check:
+    name: Struktur-Check (S-A bis S-E)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Modul-Ordner prüfen
+        run: |
+          for m in s-a-ui-shell s-b-macro-launchpad s-c-automation s-d-integrations s-e-monitor; do
+            test -d "services/$m" || { echo "FEHLT: services/$m"; exit 1; }
+            test -f "services/$m/README.md" || { echo "FEHLT: services/$m/README.md"; exit 1; }
+          done
+          echo "Alle Modul-Ordner vorhanden."
+      - name: Kern-Dateien prüfen
+        run: |
+          for f in README.md ARCHITECTURE.md LICENSE CHANGELOG.md CONTRIBUTING.md SECURITY.md schema/events.schema.json; do
+            test -f "$f" || { echo "FEHLT: $f"; exit 1; }
+          done
+          echo "Kern-Dateien vorhanden."

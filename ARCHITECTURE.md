@@ -1,6 +1,6 @@
 # NEXUS HUD — Architektur
 
-> Technische Spec zum Projekt aus `README.txt`. Stand: **V 1.0.0-1** — kein Code vorhanden.
+> Technische Spec zum Projekt aus `README.md`. Stand: **V 1.0.0-1** — kein Code vorhanden.
 
 ---
 
@@ -124,7 +124,7 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 
 ## 5. Module (S-A bis S-E)
 
-Technologie je Modul wie in `README.txt` spezifiziert (inkl. Alternativen).
+Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 
 ### S-A — Frontend / UI Shell
 * **Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
@@ -219,7 +219,7 @@ Ziel < 150 MB Gesamtverbrauch. Realistische Schätzung je Runtime:
 
 ## 10. Roadmap-Detail (12 Wochen)
 
-Siehe `README.txt` für den Überblick. Hier die technischen Deliverables:
+Siehe `README.md` für den Überblick. Hier die technischen Deliverables:
 
 **Phase 1 (Woche 1–3): Grundgerüst & IPC**
 - Repo-Struktur, CI (Build je Modul), JSON-Schema-Verzeichnis.
