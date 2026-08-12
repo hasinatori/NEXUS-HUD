@@ -7,6 +7,7 @@ Cyberpunk-Dark-Mode: dunkler Hintergrund, neon-akzentuierte Akzente, dezente Sca
 Ziel: hohe Ablesbarkeit bei geringer CPU-Last, keine Ablenkung im Vollbild-Spiel.
 
 ## Farbpalette (Vorschlag)
+
 | Rolle | Farbe | Hex |
 | :--- | :--- | :--- |
 | Hintergrund | Anthrazit | `#0d1117` |
