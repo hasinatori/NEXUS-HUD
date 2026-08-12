@@ -24,7 +24,7 @@ NEXUS HUD verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steueru
 
 ## 2. System-Übersicht
 
-```
+```text
                     +-----------------------------------------------------+
                     |                     NEXUS HUD                        |
                     |                                                      |
@@ -127,30 +127,35 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 
 ### S-A — Frontend / UI Shell
+
 * **Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
 * **Verantwortung:** Frameless Overlay, Grid-Layout, Widget-Bibliothek, Darstellung aller Events.
 * **Sendet:** `cmd.*` (Hotkeys, Launch, Automation, Media).
 * **Empfängt:** alle `event.*`-Notifications.
 
 ### S-B — Macro- & Launchpad-System
+
 * **Stack:** `C# / C++ / Rust`
 * **Verantwortung:** Global Hotkeys, Process Launcher, Window Manager, Clipboard-Manager.
 * **Sendet:** `event.hotkey.triggered`, `event.process.started`, `event.window.moved`.
 * **Empfängt:** `cmd.hotkey.register`, `cmd.app.launch`, `cmd.window.move`.
 
 ### S-C — Automation Engine
+
 * **Stack:** `Go` oder `Node.js / Python`
 * **Verantwortung:** File-Watcher, Task-Runner, IF-THIS-THEN-THAT-Regel-Engine.
 * **Sendet:** `event.automation.started`, `event.automation.finished`, `event.file.changed`.
 * **Empfängt:** `cmd.automation.run`, `event.profile.switched` (aktive Regeln je Profil).
 
 ### S-D — Integrated Apps
+
 * **Stack:** `Node.js / TypeScript`
 * **Verantwortung:** Spotify, Discord, WhatsApp → Unified-Events.
 * **Sendet:** `event.media.state`, `event.presence.changed`.
 * **Empfängt:** `cmd.media.toggle`, `cmd.media.next`, `cmd.media.volume`.
 
 ### S-E — Coding & Build Monitoring
+
 * **Stack:** `Go` oder `Python`
 * **Verantwortung:** Git-Watcher, Build-Log-Parser, System-Metriken, IDE-Status.
 * **Sendet:** `event.system.metrics`, `event.git.status`, `event.build.failed`, `event.build.succeeded`, `event.ide.focus`.
@@ -162,7 +167,7 @@ Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 
 **Szenario "Build Failed → Sound → UI-Flash" (Phase 3):**
 
-```
+```text
 S-E  Build-Log-Parser erkennt "Build Failed"
   └── event.build.failed  → IPC-Bus
         ├── S-A  → UI flasht rot (Widget "Build")

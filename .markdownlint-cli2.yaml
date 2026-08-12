@@ -1,7 +1,15 @@
 # Zweck: Lockerung der Markdown-Regeln für projekttypische Inhalte.
 # MD013 – lange Zeilen (Tabellen, Beschreibungen)
 # MD033 – inline-HTML (Zweck-Kommentare <!-- -->)
+# MD004 – gemischte Listenzeichen (* und -) je Datei bewusst im Einsatz
+# MD022 – Überschriften direkt von Listen gefolgt (kompakter Doku-Stil)
+# MD032 – Listen direkt unter Überschriften/Labels (z. B. "**IPC:**" gefolgt von Liste)
+# MD036 – Fett-Einzeiler statt Überschriften (z. B. "**Ziele:**")
 config:
   default: true
   MD013: false
   MD033: false
+  MD004: false
+  MD022: false
+  MD032: false
+  MD036: false

@@ -7,6 +7,7 @@
 - Entwicklung/Unit-Tests auch auf **ChromeOS Crostini (Debian)** möglich.
 
 ## Toolchains (je Modul, noch zu finalisieren)
+
 | Modul | Toolchain |
 | :--- | :--- |
 | S-A / S-B | .NET 8 SDK (WinUI 3/WPF) oder Rust + Node.js 20+ (Tauri) |

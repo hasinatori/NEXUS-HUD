@@ -3,7 +3,8 @@
 <!-- Zweck: Spec der IF-THIS-THEN-THAT-Regeln der Automation Engine (S-C). Planungsstand. -->
 
 ## Grundform
-```
+
+```text
 WHEN <Trigger>
 IF <Bedingung>
 THEN <Aktion>
@@ -23,7 +24,8 @@ THEN <Aktion>
 - Event an den Bus senden (z. B. Sound über S-D, UI-Flash über S-A).
 
 ## Beispiel
-```
+
+```text
 WHEN event.build.failed
 IF profile is dev
 THEN cmd.media.play_sound("error.wav") + cmd.ui.flash("Build")
