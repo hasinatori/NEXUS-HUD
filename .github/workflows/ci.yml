@@ -13,7 +13,7 @@ jobs:
     name: Markdown-Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v19
 
@@ -21,7 +21,7 @@ jobs:
     name: Schema-Validierung
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -32,7 +32,7 @@ jobs:
     name: Struktur-Check (S-A bis S-E)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Modul-Ordner prüfen
         run: |
           for m in s-a-ui-shell s-b-macro-launchpad s-c-automation s-d-integrations s-e-monitor; do
