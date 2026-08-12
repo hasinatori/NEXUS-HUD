@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "nexus://events.schema.json",
+  "title": "NEXUS HUD Event-Schema",
+  "description": "Single source of truth für die IPC-Verträge (JSON-RPC 2.0). Alle Module validieren ihre Events gegen diese Definition. Siehe ARCHITECTURE.md Abschnitt 3.",
+  "type": "object",
+  "required": ["jsonrpc", "method", "params"],
+  "properties": {
+    "jsonrpc": {
+      "const": "2.0"
+    },
+    "id": {
+      "description": "Requests haben eine id (erwarten Antwort), Notifications/Events nicht.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "null" }
+      ]
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "event.system.hello",
+        "event.system.heartbeat",
+        "event.system.metrics",
+        "event.build.failed",
+        "event.build.succeeded",
+        "event.git.status",
+        "event.media.state",
+        "event.presence.changed",
+        "event.profile.switched",
+        "event.hotkey.triggered",
+        "event.process.started",
+        "event.window.moved",
+        "event.automation.started",
+        "event.automation.finished",
+        "event.file.changed",
+        "event.ide.focus",
+        "cmd.media.toggle",
+        "cmd.media.next",
+        "cmd.media.volume",
+        "cmd.app.launch",
+        "cmd.hotkey.register",
+        "cmd.window.move",
+        "cmd.automation.run",
+        "cmd.metrics.set_interval",
+        "cmd.git.watch"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "description": "Absendendes Modul (S-A bis S-E).",
+          "type": "string",
+          "pattern": "^S-[A-E]$"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

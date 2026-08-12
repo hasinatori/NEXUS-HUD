@@ -1,0 +1,47 @@
+# Generierte & ignorierte Dateien
+# Zweck: Nur Quellcode einchecken, keine Build-Artefakte oder Abhängigkeiten.
+
+# --- Allgemein / OS ---
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# --- .NET / C# (S-A, S-B) ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+publish/
+
+# --- Rust / Tauri (S-A, S-B) ---
+target/
+node_modules/
+dist/
+
+# --- Node.js / TypeScript (S-A, S-D) ---
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+dist/
+*.tsbuildinfo
+
+# --- Go (S-C, S-E) ---
+bin/
+*.exe
+*.test
+*.out
+
+# --- Python (S-C, S-E) ---
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# --- Lokale Konfiguration / Secrets ---
+.env
+.env.*
+*.local
+credentials.json
