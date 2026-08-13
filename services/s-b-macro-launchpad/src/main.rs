@@ -7,14 +7,14 @@ use tokio_tungstenite::connect_async;
 
 const SOURCE: &str = "S-B";
 const SERVICE_ID: &str = "s-b-macro-launchpad";
-const VERSION: &str = "0.1.0";
 const HELLO_INTERVAL: Duration = Duration::from_secs(5);
 
 fn hello() -> String {
     format!(
         "{{\"jsonrpc\":\"2.0\",\"method\":\"event.system.hello\",\"params\":{{\
          \"source\":\"{SOURCE}\",\"protocol_version\":1,\"service_id\":\"{SERVICE_ID}\",\
-         \"version\":\"{VERSION}\",\"ts\":\"{}\"}}}}",
+         \"version\":\"{}\",\"ts\":\"{}\"}}}}",
+        env!("CARGO_PKG_VERSION"),
         Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
     )
 }

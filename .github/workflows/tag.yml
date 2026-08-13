@@ -1,0 +1,42 @@
+# Zweck: Automatisch einen Tag (vX.Y.Z aus VERSION.json) setzen und das
+# GitHub Release erstellen, sobald ein Release-PR (release/*) gemergt wurde.
+# Wichtig: Ein per GITHUB_TOKEN erstellter Tag triggert den Workflow
+# "publish" nicht (Recursion-Protection von GitHub), deshalb wird das Release
+# hier direkt angelegt. Manuell gepushte Tags durchlaufen weiterhin "publish".
+# Doku: docs/releasing.md
+name: tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-release:
+    name: Tag & Release erstellen
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Git-Identität setzen
+        run: |
+          git config user.name "hasinatori"
+          git config user.email "nhaas339@gmail.com"
+      - name: Tag erstellen und pushen
+        id: tag
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('VERSION.json'))['version'])")
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: GitHub Release erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/release-notes.py "${{ steps.tag.outputs.version }}" > /tmp/release-notes.md
+          gh release create "v${{ steps.tag.outputs.version }}" \
+            --title "v${{ steps.tag.outputs.version }}" \
+            --notes-file /tmp/release-notes.md

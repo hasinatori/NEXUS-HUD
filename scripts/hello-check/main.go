@@ -14,6 +14,7 @@ import (
 
 	"github.com/coder/websocket"
 
+	"github.com/hasinatori/NEXUS-HUD/shared/version"
 	"github.com/hasinatori/NEXUS-HUD/shared/wsclient"
 )
 
@@ -36,7 +37,13 @@ const (
 func main() {
 	port := flag.Int("port", wsclient.PortFromEnv(), "Port des lokalen WebSocket-Bus")
 	timeout := flag.Duration("timeout", 15*time.Second, "Wartezeit für alle hellos")
+	showVersion := flag.Bool("version", false, "Version ausgeben und beenden")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(version.Project)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()

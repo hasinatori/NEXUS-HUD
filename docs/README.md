@@ -7,6 +7,7 @@ Enthalten:
 - `rule-engine.md` — Syntax der IF-THIS-THEN-THAT-Regeln (S-C).
 - `testing.md` — Teststrategie je Modul und Headless-Tests.
 - `dev-env.md` — Setup der Entwicklungsumgebung und Workflows.
+- `releasing.md` — Versionsschema, SemVer-Politik und Release-Ablauf.
 
 Im Repo-Root:
 - `ARCHITECTURE.md` — Systemarchitektur, IPC-Protokoll, Security, RAM-Budget.
