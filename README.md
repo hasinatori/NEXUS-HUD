@@ -9,7 +9,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Reine Planung. Noch kein Code geschrieben. Alle nachfolgenden Wegpunkte sind offen.
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-A (UI) folgt.
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
@@ -111,9 +111,9 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 ### Phase 1: Core Setup & Inter-Process Communication (Woche 1–3)
 * **Ziel:** Alle Architekturgrundlagen stehen, Module können miteinander sprechen.
 * **Waypoints:**
-  * [ ] Repo-Setup & Definition des IPC-Protokolls (JSON Schema für Events).
+  * [x] Repo-Setup & Definition des IPC-Protokolls (JSON Schema für Events).
   * [ ] **S-A:** Skeleton-UI steht auf dem Screen.
-  * [ ] **S-B bis S-E:** Grundlegende Services senden "Hello World"-Ping an die UI.
+  * [x] **S-B bis S-E:** Grundlegende Services senden "Hello World"-Ping an den Bus.
 
 ### Phase 2: Core Functionality (Woche 4–7)
 * **Ziel:** Die wichtigsten Einzel-Features laufen isoliert.
@@ -151,11 +151,36 @@ Je nach umgesetztem Modul:
 | **S-C / S-E** | Go 1.22+ bzw. Python 3.11+ |
 | **S-D** | Node.js 20+ |
 
-### Repo-Setup
-1. Repository klonen bzw. initialisieren.
+### Phase 1 (Dev auf Crostini/Debian)
+Voraussetzungen: Go 1.24+, Node.js 24+ und Rust/Cargo 1.85+ (`sudo apt-get install golang-go cargo`). Der Bus-Port ist standardmäßig `49152` und über `-port` bzw. `NEXUS_WS_PORT` änderbar.
+
+1. **Bus starten** (separates Terminal):
+
+   ```sh
+   go run ./cmd/bus
+   ```
+
+2. **Services starten** (je ein Terminal):
+
+   ```sh
+   go run ./services/s-c-automation
+   go run ./services/s-e-monitor
+   cd services/s-d-integrations && npm install && npm run build && npm start
+   cd services/s-b-macro-launchpad && cargo run
+   ```
+
+3. **Verifikation** — erwartet 5 `event.system.hello` (Bus + S-B bis S-E) in 15 s:
+
+   ```sh
+   go run ./scripts/hello-check
+   ```
+
+Jeder Service sendet nach dem Verbinden `event.system.hello` und wiederholt es alle 5 s, damit `hello-check` die Services unabhängig vom Verbindungszeitpunkt erkennt. Details zum Handshake: [ARCHITECTURE.md](./ARCHITECTURE.md) Abschnitt 3.3.
+
+### Repo-Setup (Windows-Dev)
+1. Repository klonen.
 2. Je Modul Toolchain installieren (siehe Tabelle oben).
 3. IPC-Protokoll-Schema aus `ARCHITECTURE.md` als JSON-Schema übernehmen.
-4. Modul-Skeletons starten und ersten "Hello World"-Ping an die UI senden.
 
 ### Dokumente
 * **README.md** — Projektübersicht, Module, Roadmap (diese Datei).

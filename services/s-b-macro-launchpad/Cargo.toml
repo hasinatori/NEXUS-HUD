@@ -1,0 +1,11 @@
+[package]
+name = "s-b-macro-launchpad"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.45", features = ["clock"] }
+futures-util = "0.3.34"
+serde_json = "1.0.151"
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "time", "signal"] }
+tokio-tungstenite = "0.30.0"

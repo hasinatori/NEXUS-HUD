@@ -53,9 +53,9 @@
       "required": ["source", "protocol_version"],
       "properties": {
         "source": {
-          "description": "Absendendes Modul (S-A bis S-E).",
+          "description": "Absendendes Modul (S-A bis S-E) oder der IPC-Bus.",
           "type": "string",
-          "pattern": "^S-[A-E]$"
+          "pattern": "^(S-[A-E]|bus)$"
         },
         "protocol_version": {
           "description": "Version des IPC-Protokolls (aktuell 1).",

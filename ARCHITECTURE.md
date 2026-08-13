@@ -110,6 +110,8 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 
 **Hello-World-Definition (Phase 1):** Jeder Service sendet nach Connect
 `event.system.hello` mit `{ "source": "S-B", "service_id": "s-b-macro-launchpad", "version": "0.1.0", "ts": "<ISO8601>" }` — die UI zeigt dies als Status-Badge an.
+Der Bus sendet nach jedem Connect selbst ein Hello mit `source: "bus"` und `service_id: "bus"`.
+In der Phase 1 wiederholen die Service-Stubs das Hello alle 5 s, damit `scripts/hello-check` alle Teilnehmer unabhängig vom Verbindungszeitpunkt erkennt.
 
 ### 3.4 Protokoll-Versionierung
 

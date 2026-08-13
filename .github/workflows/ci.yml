@@ -1,5 +1,5 @@
-# Zweck: Basis-CI für das NEXUS HUD. Hält die Doku und Projektstruktur grün,
-# bis die Module echten Code mit eigenen Pipelines haben.
+# Zweck: CI für das NEXUS HUD. Doku, Projektstruktur und die Phase-1-Stubs
+# (Go, Node/TS, Rust) bleiben damit grün.
 name: ci
 
 on:
@@ -50,3 +50,47 @@ jobs:
             test -f "$f" || { echo "FEHLT: $f"; exit 1; }
           done
           echo "Kern-Dateien vorhanden."
+
+  go:
+    name: Go (Bus, S-C, S-E, hello-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.24"
+      - name: Go vet
+        run: go vet ./...
+      - name: Go build
+        run: go build ./...
+      - name: Go test
+        run: go test ./...
+
+  node:
+    name: Node/TS (S-D)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: services/s-d-integrations/package-lock.json
+      - name: Abhängigkeiten installieren
+        working-directory: services/s-d-integrations
+        run: npm ci
+      - name: TypeScript-Typen prüfen
+        working-directory: services/s-d-integrations
+        run: npm run typecheck
+
+  rust:
+    name: Rust (S-B)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Rust build
+        working-directory: services/s-b-macro-launchpad
+        run: cargo build --locked
