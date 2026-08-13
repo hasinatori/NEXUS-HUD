@@ -60,11 +60,13 @@ NEXUS HUD verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steueru
 
 | Transport | Rolle | Begründung |
 | :--- | :--- | :--- |
-| **Named Pipes** | Primär (Windows) | Nativer Windows-IPC, schnell, keine Port-Kollisionen, Zugriffskontrolle über DACL. |
-| **Local WebSocket** (127.0.0.1) | Fallback & Debugging | Einfach in Node/Go/Python zu nutzen, JSON-nativ, gut testbar. |
+| **Named Pipes** | Ziel (Windows-Release) | Nativer Windows-IPC, schnell, keine Port-Kollisionen, Zugriffskontrolle über DACL. |
+| **Local WebSocket** (127.0.0.1) | **Phase 1 / Dev** | Einfach in Go/Rust/Node zu nutzen, JSON-nativ, auf Crostini testbar. |
 
 * Named Pipe-Name: `\\.\pipe\nexus-hud`
 * WebSocket-Endpoint: `ws://127.0.0.1:<port>/` (Port konfigurierbar, Standard z.B. 49152–49162-Bereich).
+
+**Phase-1-Entscheidung:** Der Hello-World-Handshake und die Service-Stubs laufen zunächst über **Local WebSocket** — damit ist alles auf Crostini (Linux) entwickel- und testbar. Named Pipes werden mit der S-A/S-B-Windows-Phase (Overlay, Win32) ergänzt; das Protokoll bleibt transportunabhängig identisch.
 
 ### 3.2 Protokoll: JSON-RPC 2.0
 
@@ -107,7 +109,34 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 | `cmd.automation.run` | UI → S-C | Automation/Task starten. |
 
 **Hello-World-Definition (Phase 1):** Jeder Service sendet nach Connect
-`event.system.hello` mit `{ "source": "S-B", "version": "0.1.0" }` — die UI zeigt dies als Status-Badge an.
+`event.system.hello` mit `{ "source": "S-B", "service_id": "s-b-macro-launchpad", "version": "0.1.0", "ts": "<ISO8601>" }` — die UI zeigt dies als Status-Badge an.
+
+### 3.4 Protokoll-Versionierung
+
+* Jede Nachricht trägt `protocol_version` im `params`-Objekt (aktuell `1`).
+* Mismatch (`protocol_version` != erwartet) wird vom Empfänger mit dem Fehlerformat (Abschnitt 3.5) beantwortet und die Verbindung geschlossen.
+* Das JSON-Schema in `schema/events.schema.json` ist die single source of truth; Änderungen am Event-Katalog erhöhen die `protocol_version`.
+
+### 3.5 Fehlerformat
+
+Antwort/Notification bei Fehlern, JSON-RPC-2.0-konform:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "error.protocol",
+  "params": {
+    "protocol_version": 1,
+    "source": "S-A",
+    "code": -32602,
+    "message": "Ungültiges Event: unbekannte Methode",
+    "ts": "2026-08-13T10:00:00Z"
+  }
+}
+```
+
+* Fehlercodes: JSON-RPC-Standardcodes (`-32600` Invalid Request, `-32601` Method not found, `-32602` Invalid params).
+* `error.protocol` wird als Notification gesendet (keine `id`).
 
 ---
 

@@ -27,6 +27,10 @@ jobs:
           python-version: "3.11"
       - name: JSON-Schema validieren
         run: python -c "import json,glob; [json.load(open(f)) for f in glob.glob('schema/*.json')]; print('Alle JSON-Dateien in schema/ sind gültig.')"
+      - name: Schema-Test (Beispiel-Payloads)
+        run: |
+          pip install --quiet jsonschema
+          python tests/schema/validate_events.py
 
   structure-check:
     name: Struktur-Check (S-A bis S-E)
