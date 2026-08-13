@@ -23,6 +23,17 @@ VALID = [
     },
     {
         "jsonrpc": "2.0",
+        "method": "event.system.hello",
+        "params": {
+            "source": "bus",
+            "protocol_version": 1,
+            "service_id": "bus",
+            "version": "0.1.0",
+            "ts": "2026-08-13T10:00:00Z",
+        },
+    },
+    {
+        "jsonrpc": "2.0",
         "method": "event.system.heartbeat",
         "params": {"source": "S-C", "protocol_version": 1},
     },
