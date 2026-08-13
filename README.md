@@ -1,5 +1,7 @@
 # NEXUS HUD — Desktop Command Center
 
+<!-- Zuletzt geändert: 2026-08-13 -->
+
 > **Das ultimative Overlay & Dashboard auf dem 2. Monitor für Devs, Gamer & Power-User.**
 > *Kein trockenes Office-Tool, sondern eine Performance-Engine für Automation, Shortcuts & System-Monitoring.*
 
@@ -104,20 +106,20 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 
 ---
 
-## Roadmap & Meilensteine (12-Wochen-Plan)
+## Roadmap & Meilensteine
 
 > Stand: **Phase 1 läuft** — IPC-Protokoll v1 und Dev-Bus funktionieren, die
 > Service-Stubs senden Hello-Pings an den Bus. Versions-/Release-Prozess:
 > siehe `docs/releasing.md`.
 
-### Phase 1: Core Setup & Inter-Process Communication (Woche 1–3)
+### Phase 1: Core Setup & Inter-Process Communication
 * **Ziel:** Alle Architekturgrundlagen stehen, Module können miteinander sprechen.
 * **Waypoints:**
   * [x] Repo-Setup & Definition des IPC-Protokolls (JSON Schema für Events).
   * [ ] **S-A:** Skeleton-UI steht auf dem Screen.
   * [x] **S-B bis S-E:** Grundlegende Services senden "Hello World"-Ping an den Bus.
 
-### Phase 2: Core Functionality (Woche 4–7)
+### Phase 2: Core Functionality
 * **Ziel:** Die wichtigsten Einzel-Features laufen isoliert.
 * **Waypoints:**
   * [ ] **S-A:** Dashboard-Grid lässt sich konfigurieren.
@@ -126,14 +128,14 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
   * [ ] **S-D:** Spotify-Steuerung ist voll funktionsfähig.
   * [ ] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
 
-### Phase 3: Integration & Polish (Woche 8–10)
+### Phase 3: Integration & Polish
 * **Ziel:** Die Module greifen ineinander (Context-Switching & Triggerevents).
 * **Waypoints:**
   * [ ] Profil-Switching: Hotkey schaltet UI + Apps + Hintergrund-Tasks gleichzeitig um.
   * [ ] Cross-Module Automation (z. B. *Build Failed in S-E* -> *Spiele Sound über S-D* -> *Flashe UI in S-A*).
   * [ ] Performance-Optimierung (RAM-Budget der Gesamtanwendung < 150 MB).
 
-### Phase 4: Testing & Dogfooding (Woche 11–12)
+### Phase 4: Testing & Dogfooding
 * **Ziel:** Das Team nutzt das Tool täglich selbst zum Weiter-Coden.
 * **Waypoints:**
   * [ ] Bugfixing & UI/UX Fine-tuning.
