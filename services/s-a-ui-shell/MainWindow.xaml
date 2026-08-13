@@ -1,0 +1,44 @@
+<Window
+    x:Class="NexusHud.UI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="NEXUS HUD">
+
+    <!-- Zuletzt geändert: 2026-08-13 -->
+    <!-- Konstrukt: normales Fenster (Drag/Resize). Overlay-Mode (frameless,
+         transparent, always-on-top) folgt in der Windows-Verfeinerung. -->
+
+    <Grid Background="{StaticResource Nexus.Background}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Kopfzeile -->
+        <StackPanel Grid.Row="0" Margin="24,20,24,8" Spacing="6">
+            <TextBlock Text="NEXUS HUD" FontSize="28" FontWeight="Bold"
+                       Foreground="{StaticResource Nexus.Accent}" />
+            <TextBlock Text="S-A UI-Shell · WinUI 3 (.NET 8)" FontSize="13"
+                       Foreground="{StaticResource Nexus.Muted}" />
+            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                <TextBlock Text="{x:Bind Vm.State, Mode=OneWay}"
+                           Foreground="{StaticResource Nexus.Muted}" />
+                <TextBlock Text="{x:Bind Vm.HelloCountString, Mode=OneWay}"
+                           Foreground="{StaticResource Nexus.Muted}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Widget-Fläche (Platzhalter) -->
+        <Grid Grid.Row="1" Margin="24,8,24,24">
+            <Border Background="{StaticResource Nexus.Panel}"
+                    CornerRadius="12"
+                    BorderBrush="{StaticResource Nexus.Accent}" BorderThickness="1">
+                <TextBlock Text="{x:Bind Vm.LastEvent, Mode=OneWay}"
+                           Foreground="{StaticResource Nexus.Muted}"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Margin="24" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

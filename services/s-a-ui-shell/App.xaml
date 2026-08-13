@@ -1,0 +1,21 @@
+<Application
+    x:Class="NexusHud.UI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Zuletzt geändert: 2026-08-13 -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Nexus HUD Theme (Cyberpunk Dark) -->
+            <SolidColorBrush x:Key="Nexus.Background" Color="#0A0E14" />
+            <SolidColorBrush x:Key="Nexus.Panel" Color="#111827" />
+            <SolidColorBrush x:Key="Nexus.Accent" Color="#00E5FF" />
+            <SolidColorBrush x:Key="Nexus.Text" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="Nexus.Muted" Color="#6B7280" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
