@@ -1,6 +1,7 @@
 # Changelog
 
 <!-- Zweck: Übersicht aller nennenswerten Änderungen, Format nach Keep a Changelog. -->
+<!-- Zuletzt geändert: 2026-08-13 -->
 
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
@@ -36,6 +37,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 - README.md: Status auf Phase 1 aktualisiert, Abschnitt „Getting Started" mit konkreten Startbefehlen für den Dev-Bus und alle Services.
 - ARCHITECTURE.md 3.3: Bus-Hello und periodisches Hello der Stubs dokumentiert.
 - ARCHITECTURE.md/CONTRIBUTING.md: Status und CI-Pflichten an Phase 1 und das Release-Setup angepasst.
+- README.md/ARCHITECTURE.md: Zeitraumangaben (Wochen) aus der Roadmap entfernt; Änderungsdatum wird künftig als Kommentar im Dateikopf geführt (Konvention, siehe CONTRIBUTING.md).
 
 ### Planned (Roadmap)
 - Phase 1–4 gemäß README.md: IPC-Grundgerüst, Kernfeatures, Integration, Release v1.0.

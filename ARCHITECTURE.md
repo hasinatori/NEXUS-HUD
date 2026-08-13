@@ -1,5 +1,7 @@
 # NEXUS HUD — Architektur
 
+<!-- Zuletzt geändert: 2026-08-13 -->
+
 > Technische Spec zum Projekt aus `README.md`. Stand: **Phase 1** — Version
 > und Versionsschema siehe `VERSION.json` bzw. `docs/releasing.md`.
 
@@ -254,28 +256,28 @@ Ziel < 150 MB Gesamtverbrauch. Realistische Schätzung je Runtime:
 
 ---
 
-## 10. Roadmap-Detail (12 Wochen)
+## 10. Roadmap-Detail
 
 Siehe `README.md` für den Überblick. Hier die technischen Deliverables:
 
-**Phase 1 (Woche 1–3): Grundgerüst & IPC**
+**Phase 1: Grundgerüst & IPC**
 - Repo-Struktur, CI (Build je Modul), JSON-Schema-Verzeichnis.
 - S-A: Fenster auf Bildschirm (Skeleton, Dark-Theme-Basis).
 - S-B–S-E: Je ein Service mit `event.system.hello`-Handshake.
 
-**Phase 2 (Woche 4–7): Kernfeatures isoliert**
+**Phase 2: Kernfeatures isoliert**
 - S-A: konfigurierbares Dashboard-Grid.
 - S-B: Launcher + erste Global Hotkeys.
 - S-C: ein stabiler File-Watcher mit Regel.
 - S-D: Spotify Play/Pause + Track-Info.
 - S-E: CPU/RAM-Metriken + Git-Status-Anzeige.
 
-**Phase 3 (Woche 8–10): Integration & Polish**
+**Phase 3: Integration & Polish**
 - `event.profile.switched` über den Bus wirksam.
 - Cross-Module-Automation (Abschnitt 6).
 - RAM-Messung und Optimierung gegen das <150-MB-Budget.
 
-**Phase 4 (Woche 11–12): Testing & Dogfooding**
+**Phase 4: Testing & Dogfooding**
 - Bugfixes, UX-Feintuning.
 - Installer/Packaging (InnoSetup bzw. Tauri-Bundler).
 - v1.0 Release.

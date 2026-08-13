@@ -1,6 +1,7 @@
 # CONTRIBUTING.md
 
 <!-- Zweck: Regeln und Ablauf für Beiträge zum NEXUS HUD (Issues, PRs, Entwicklung). -->
+<!-- Zuletzt geändert: 2026-08-13 -->
 
 ## Projekt im Überblick
 NEXUS HUD ist ein Desktop-HUD für den 2. Monitor mit entkoppelter Modul-Architektur
@@ -34,5 +35,12 @@ funktionsfähig; Versionierung und Release-Setup eingerichtet (siehe `docs/relea
 ## Konventionen
 - Doku und GUI-Texte auf **Deutsch**; Provider-/Produktnamen bleiben original.
 - Keine Code-Kommentare außer auf ausdrücklichen Wunsch.
+- **Änderungsdatum:** Bei jeder Änderung an einer Datei wird das aktuelle Datum
+  als Kommentar im Dateikopf aktualisiert:
+  - Markdown: `<!-- Zuletzt geändert: JJJJ-MM-TT -->`
+  - Go/Rust/TypeScript/Python/Shell: `// Zuletzt geändert: JJJJ-MM-TT` bzw. `#`
+  - **Ausnahmen:** JSON-Dateien (`VERSION.json`, `package.json`, `schema/*.json`,
+    Lockfiles — Kommentare dort nicht möglich) und generierte Dateien
+    (`shared/version/version.go` — wird vom Bump-Skript überschrieben).
 - JSON-Schema in `schema/events.schema.json` ist die single source of truth für IPC-Verträge.
 - Sicherheitsrelevantes bitte über SECURITY.md melden, nicht als öffentliches Issue.
