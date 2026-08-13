@@ -15,7 +15,7 @@ funktionsfähig; Versionierung und Release-Setup eingerichtet (siehe `docs/relea
 ## Entwicklungsumgebung
 - Zielplattform: Windows. Entwicklung/Testing auch auf Linux (Crostini) möglich.
 - Je Modul wird eine Toolchain benötigt — Details im "Getting Started"-Abschnitt der README.md.
-- Tech-Stacks: S-B = Rust, S-C = Go, S-D = Node/TS, S-E = Go, S-A = offen (Tauri oder WinUI 3).
+- Tech-Stacks: S-A = WinUI 3 (.NET 8), S-B = Rust, S-C = Go, S-D = Node/TS, S-E = Go.
 
 ## Arbeitsweise
 1. **Issue anlegen oder verlinken** für jede Änderung (Bug, Feature, Doku).

@@ -33,7 +33,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 
 | Modul | Bereich | Empfohlener Tech-Stack | Grund für die Wahl |
 | :--- | :--- | :--- | :--- |
-| **S-A** | **Frontend / UI Shell** | **C# (.NET 8 + WinUI 3 / WPF)** oder **Tauri (Rust + React)** | Native Windows-UI, GPU-Beschleunigung, frameless Window-Support. |
+| **S-A** | **Frontend / UI Shell** | **C# (.NET 8 + WinUI 3)** | Native Windows-UI, GPU-Beschleunigung, frameless Window-Support. |
 | **S-B** | **Macro- & Launchpad-System** | **C# / Rust** | Tiefe OS-Integration (Global Hotkeys, Process Manager, Win32 API). |
 | **S-C** | **Automation Engine** | **Go (Golang) / Python** | Extrem schnelle, nebenläufige Task-Ausführung, geringer RAM-Verbrauch. |
 | **S-D** | **API Integrations** | **TypeScript / Node.js** | Perfekt für Async-Netzwerk-Requests, OAuth2 & WebSocket-Clients. |
@@ -44,7 +44,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 ### S-A: Frontend & UI-Shell
 
 * **Lead:** Developer A
-* **Tech-Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
+* **Tech-Stack:** `C# (.NET 8 / WinUI 3)` (Build nur auf Windows, siehe docs/dev-env.md)
 * **Hauptaufgaben:**
   * [ ] Erstellung des Hauptfensters (Frameless Overlay, Snapping für 2. Monitor).
   * [ ] Dark-Mode / Cyberpunk UI Design & Grid Layout.
@@ -139,7 +139,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Ziel:** Das Team nutzt das Tool täglich selbst zum Weiter-Coden.
 * **Waypoints:**
   * [ ] Bugfixing & UI/UX Fine-tuning.
-  * [ ] Installer / Binary-Packaging (z. B. via InnoSetup oder Tauri Bundler).
+  * [ ] Installer / Binary-Packaging (z. B. via InnoSetup).
   * [ ] v1.0 Release.
 
 ---
@@ -151,7 +151,8 @@ Je nach umgesetztem Modul:
 
 | Modul | Benötigte Toolchain |
 | :--- | :--- |
-| **S-A / S-B** | .NET 8 SDK (WinUI 3/WPF) bzw. Rust + Node.js 20+ (Tauri) |
+| **S-A** | .NET 8 SDK + Windows App SDK (WinUI 3) — Build nur auf Windows |
+| **S-B** | Rust (siehe Phase-1-Dev-Abschnitt unten) |
 | **S-C / S-E** | Go 1.22+ bzw. Python 3.11+ |
 | **S-D** | Node.js 20+ |
 

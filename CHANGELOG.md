@@ -38,6 +38,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 - ARCHITECTURE.md 3.3: Bus-Hello und periodisches Hello der Stubs dokumentiert.
 - ARCHITECTURE.md/CONTRIBUTING.md: Status und CI-Pflichten an Phase 1 und das Release-Setup angepasst.
 - README.md/ARCHITECTURE.md: Zeitraumangaben (Wochen) aus der Roadmap entfernt; Änderungsdatum wird künftig als Kommentar im Dateikopf geführt (Konvention, siehe CONTRIBUTING.md).
+- S-A: Stack-Entscheidung fixiert — **WinUI 3 (.NET 8)** (Build/Test nur auf Windows, Crostini nur Vorbereitung); Tauri-Option entfernt; RAM-Ziel (<150 MB) als weicher Richtwert umformuliert (README.md, ARCHITECTURE.md, docs/dev-env.md).
 
 ### Planned (Roadmap)
 - Phase 1–4 gemäß README.md: IPC-Grundgerüst, Kernfeatures, Integration, Release v1.0.

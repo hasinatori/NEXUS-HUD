@@ -1,10 +1,11 @@
 # services/ — Hintergrund-Dienste
 
 <!-- Zweck: Alle eigenständigen Services (Module) des NEXUS HUD als getrennte Unterordner. -->
+<!-- Zuletzt geändert: 2026-08-13 -->
 
 | Modul | Ordner | Aufgabe | Stack (laut README) |
 | :--- | :--- | :--- | :--- |
-| **S-A** | `s-a-ui-shell` | Frontend / UI Shell | C# (.NET 8 / WinUI 3) oder Tauri (Rust + React) |
+| **S-A** | `s-a-ui-shell` | Frontend / UI Shell | C# (.NET 8 / WinUI 3) |
 | **S-B** | `s-b-macro-launchpad` | Macro- & Launchpad-System | C# / C++ / Rust |
 | **S-C** | `s-c-automation` | Automation Engine | Go oder Node.js / Python |
 | **S-D** | `s-d-integrations` | Spotify, Discord, WhatsApp | Node.js / TypeScript |

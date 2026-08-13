@@ -1,16 +1,18 @@
 # Dev-Umgebung — Setup & Workflows
 
 <!-- Zweck: Konkrete Einrichtung der Entwicklungsumgebung für das NEXUS HUD. Planungsstand. -->
+<!-- Zuletzt geändert: 2026-08-13 -->
 
 ## Zielplattform
 - Primär **Windows**: Overlay, Global Hotkeys, Win32 API (S-A, S-B).
-- Entwicklung/Unit-Tests auch auf **ChromeOS Crostini (Debian)** möglich.
+- Entwicklung/Unit-Tests auch auf **ChromeOS Crostini (Debian)** möglich — S-A (WinUI 3) wird auf Crostini vorbereitet, aber erst auf der Windows-Maschine gebaut und getestet.
 
 ## Toolchains (je Modul, noch zu finalisieren)
 
 | Modul | Toolchain |
 | :--- | :--- |
-| S-A / S-B | .NET 8 SDK (WinUI 3/WPF) oder Rust + Node.js 20+ (Tauri) |
+| S-A | .NET 8 SDK + Windows App SDK (WinUI 3) — Build nur auf Windows |
+| S-B | Rust |
 | S-C / S-E | Go 1.22+ oder Python 3.11+ |
 | S-D | Node.js 20+ |
 
