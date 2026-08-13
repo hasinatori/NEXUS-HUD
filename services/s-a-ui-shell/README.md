@@ -2,8 +2,9 @@
 
 <!-- Zweck: Das Hauptfenster (frameless Overlay auf dem 2. Monitor) und die komplette
      Widget-Oberfläche. Reine Darstellung — keine Geschäftslogik, keine OS-/API-Zugriffe. -->
+<!-- Zuletzt geändert: 2026-08-13 -->
 
-**Stack (laut README):** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
+**Stack:** `C# (.NET 8 / WinUI 3)` — Build/Test nur auf Windows (siehe `docs/dev-env.md`)
 
 Hauptaufgaben:
 - [ ] Hauptfenster (Frameless Overlay, Snapping für 2. Monitor).

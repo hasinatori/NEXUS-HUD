@@ -34,8 +34,8 @@ NEXUS HUD verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steueru
    +-----------+    |   +----------+     +-----------+    +-------------+  |
    |  S-A      |<------>|          |<--->|  S-C      |    |  S-D        |  |
    | UI Shell  |    |   |          |     | Automation|    | Integrations|  |
-   | (WinUI 3/ |    |   |  IPC-Bus |<--->| Engine    |    | (Spotify,   |  |
-   |  WPF/Tauri|    |   |          |     +-----------+    |  Discord,   |  |
+   | (WinUI 3) |    |   |  IPC-Bus |<--->| Engine    |    | (Spotify,   |  |
+   |  .NET 8)  |    |   |          |     +-----------+    |  Discord,   |  |
    +-----------+    |   |          |<--->+-------------+  |  WhatsApp)  |  |
    +-----------+    |   |          |     |  S-B        |  +-------------+  |
    | Hotkeys / |<------>|          |<--->|  Macro &    |                   |
@@ -162,7 +162,7 @@ Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 
 ### S-A — Frontend / UI Shell
 
-* **Stack:** `C# (.NET 8 / WinUI 3)` oder `TypeScript + React (Tauri)`
+* **Stack:** `C# (.NET 8 / WinUI 3)` — Build/Test nur auf Windows (Dev-Env: docs/dev-env.md)
 * **Verantwortung:** Frameless Overlay, Grid-Layout, Widget-Bibliothek, Darstellung aller Events.
 * **Sendet:** `cmd.*` (Hotkeys, Launch, Automation, Media).
 * **Empfängt:** alle `event.*`-Notifications.
@@ -226,20 +226,23 @@ S-C wertet Events aus und stößt Aktionen an — Module bleiben entkoppelt.
 
 ---
 
-## 8. RAM-Budget (Realistisch)
+## 8. RAM-Budget (Richtwert)
 
-Ziel < 150 MB Gesamtverbrauch. Realistische Schätzung je Runtime:
+Kein hartes Ziel: ~150 MB Gesamtverbrauch als Richtwert, erst in Phase 3 mit
+echten Messungen verifiziert. Schätzung je Runtime:
 
 | Komponente | Ungefährer Speicher | Hinweis |
 | :--- | :--- | :--- |
-| UI S-A (WinUI 3 / WPF / Tauri) | 40–80 MB | Frameless Overlay + Widgets |
-| S-B (C#/Rust, Service) | 10–30 MB | Rust sparsamer als C# |
+| UI S-A (WinUI 3) | 40–80 MB | Frameless Overlay + Widgets |
+| S-B (Rust, Service) | 10–30 MB | Rust sparsamer als C# |
 | S-C (Go) | 10–15 MB | Go sehr leicht |
 | S-D (Node.js) | 40–80 MB | Node-Basis ist der größte Block |
 | S-E (Go/Python) | 10–30 MB | Python ~30 MB, Go ~10 MB |
-| **Summe** | **110–235 MB** | **< 150 MB nur bei sparsamer Kombination** |
+| **Summe** | **110–235 MB** | **Richtwert, nicht bindend** |
 
-**Konsequenz:** Das <150-MB-Ziel ist mit einem Node.js-Service **und** C#-UI **und** Python-Service nicht garantiert. Optionen: Node durch Go/Deno ersetzen, UI in Tauri (Rust) statt WinUI, Metriken nur auf Anforderung statt Dauer-Polling. Das Ziel bleibt Wunschvorgabe, wird aber in Phase 3 mit echten Messungen verifiziert.
+**Einordnung:** Der Verbrauch hängt am stärksten von S-D (Node.js) ab; ein
+hartes <150-MB-Ziel ist aufgegeben. Messungen erfolgen in Phase 3, ggf. mit
+Anpassungen (z. B. Metriken nur auf Anforderung statt Dauer-Polling).
 
 ---
 
@@ -279,7 +282,7 @@ Siehe `README.md` für den Überblick. Hier die technischen Deliverables:
 
 **Phase 4: Testing & Dogfooding**
 - Bugfixes, UX-Feintuning.
-- Installer/Packaging (InnoSetup bzw. Tauri-Bundler).
+- Installer/Packaging (InnoSetup).
 - v1.0 Release.
 
 ---
