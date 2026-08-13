@@ -1,6 +1,7 @@
 # NEXUS HUD — Architektur
 
-> Technische Spec zum Projekt aus `README.md`. Stand: **V 1.0.0-1** — kein Code vorhanden.
+> Technische Spec zum Projekt aus `README.md`. Stand: **Phase 1** — Version
+> und Versionsschema siehe `VERSION.json` bzw. `docs/releasing.md`.
 
 ---
 

@@ -17,13 +17,14 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+
+	"github.com/hasinatori/NEXUS-HUD/shared/version"
 )
 
 const (
 	DefaultPort      = 49152
 	ProtocolVersion  = 1
 	BusServiceID     = "bus"
-	BusVersion       = "0.1.0"
 	readWriteTimeout = 30 * time.Second
 )
 
@@ -129,7 +130,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.Log.Printf("Client getrennt (%s)", c.addr)
 	}()
 
-	s.send(c, Hello(BusServiceID, BusServiceID, BusVersion))
+	s.send(c, Hello(BusServiceID, BusServiceID, version.Bus))
 	s.readLoop(c)
 }
 

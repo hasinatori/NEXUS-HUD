@@ -106,7 +106,9 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 
 ## Roadmap & Meilensteine (12-Wochen-Plan)
 
-> Alle Punkte sind offen — das Projekt befindet sich in der Planungsphase.
+> Stand: **Phase 1 läuft** — IPC-Protokoll v1 und Dev-Bus funktionieren, die
+> Service-Stubs senden Hello-Pings an den Bus. Versions-/Release-Prozess:
+> siehe `docs/releasing.md`.
 
 ### Phase 1: Core Setup & Inter-Process Communication (Woche 1–3)
 * **Ziel:** Alle Architekturgrundlagen stehen, Module können miteinander sprechen.

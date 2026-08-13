@@ -1,0 +1,43 @@
+# Zweck: GitHub Release für manuell gepushte Tags (vX.Y.Z) veröffentlichen.
+# Der automatisierte Weg (Release-PR -> Merge) läuft über den Workflow "tag",
+# da GITHUB_TOKEN-Tags den "publish"-Workflow nicht triggern.
+# Doku: docs/releasing.md
+name: publish
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: GitHub Release veröffentlichen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Version prüfen (Tag vs. VERSION.json)
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('VERSION.json'))['version'])")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "Tag $GITHUB_REF_NAME passt nicht zu VERSION.json ($VERSION)." >&2
+            exit 1
+          fi
+          python3 scripts/check-version.py
+          python3 scripts/release-notes.py "$TAG" > /tmp/release-notes.md
+      - name: GitHub Release erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          ARGS=""
+          if [ "${TAG%%.*}" = "0" ]; then
+            ARGS="--prerelease"
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file /tmp/release-notes.md \
+            $ARGS

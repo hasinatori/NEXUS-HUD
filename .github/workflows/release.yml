@@ -1,0 +1,78 @@
+# Zweck: Release vorbereiten. Erstellt einen Release-Branch (release/vX.Y.Z),
+# erhöht Projekt-/Modulversionen und schneidet [Unreleased] aus der CHANGELOG.
+# Nach dem Merge erstellt der Workflow "tag" Tag + GitHub Release automatisch.
+# Doku: docs/releasing.md
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: Art des Versions-Bumps (SemVer)
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    name: Release-Branch & PR vorbereiten
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Git-Identität setzen
+        run: |
+          git config user.name "hasinatori"
+          git config user.email "nhaas339@gmail.com"
+      - name: Nächste Projektversion ermitteln
+        id: version
+        run: echo "new=$(python3 scripts/bump-version.py --next ${{ inputs.version-type }})" >> "$GITHUB_OUTPUT"
+      - name: Geänderte Module seit letztem Tag ermitteln
+        id: modules
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -z "$LAST_TAG" ]; then
+            MODS="bus s-b s-c s-d s-e"
+          else
+            MODS=""
+            CHANGED=$(git diff --name-only "$LAST_TAG"..HEAD)
+            for mod in s-b s-c s-d s-e; do
+              if printf '%s\n' "$CHANGED" | grep -q "^services/${mod}-"; then
+                MODS="$MODS $mod"
+              fi
+            done
+            REST=$(printf '%s\n' "$CHANGED" | grep -v '^services/' || true)
+            if [ -n "$REST" ]; then
+              MODS="$MODS bus"
+            fi
+          fi
+          echo "modules=$(echo $MODS)" >> "$GITHUB_OUTPUT"
+      - name: Release-Branch erstellen & Version bumpen
+        run: |
+          git checkout -b "release/v${{ steps.version.outputs.new }}"
+          python3 scripts/bump-version.py "${{ inputs.version-type }}" ${{ steps.modules.outputs.modules }}
+          git add -A
+          git commit -m "chore: Release v${{ steps.version.outputs.new }}"
+          git push -u origin "release/v${{ steps.version.outputs.new }}"
+      - name: Release-PR erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create \
+            --base main \
+            --head "release/v${{ steps.version.outputs.new }}" \
+            --title "Release v${{ steps.version.outputs.new }}" \
+            --body "Release v${{ steps.version.outputs.new }} aus \`[Unreleased]\` ausgeschnitten.
+
+**Geänderte Module:** ${{ steps.modules.outputs.modules }}
+
+Bitte reviewen und mergen. Nach dem Merge erstellt der Workflow \`tag\`
+automatisch Tag und GitHub Release."
