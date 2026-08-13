@@ -44,17 +44,26 @@
         "cmd.window.move",
         "cmd.automation.run",
         "cmd.metrics.set_interval",
-        "cmd.git.watch"
+        "cmd.git.watch",
+        "error.protocol"
       ]
     },
     "params": {
       "type": "object",
-      "required": ["source"],
+      "required": ["source", "protocol_version"],
       "properties": {
         "source": {
           "description": "Absendendes Modul (S-A bis S-E).",
           "type": "string",
           "pattern": "^S-[A-E]$"
+        },
+        "protocol_version": {
+          "description": "Version des IPC-Protokolls (aktuell 1).",
+          "const": 1
+        },
+        "service_id": {
+          "description": "Eindeutige ID des sendenden Services (z.B. bei event.system.hello).",
+          "type": "string"
         }
       }
     }

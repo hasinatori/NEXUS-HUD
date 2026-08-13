@@ -15,6 +15,8 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 - IPC-Event-Schema (`schema/events.schema.json`).
 - GitHub-CI: Markdown-Linting, Schema-Validierung, Struktur-Check.
 - Issue-/PR-Templates, Dependabot-Konfiguration, Contribution- und Security-Richtlinie.
+- IPC-Protokoll v1: Local-WebSocket als Phase-1-Transport, `protocol_version`, Handshake und Fehlerformat (`error.protocol`) spezifiziert.
+- Schema-Test `tests/schema/validate_events.py` (Beispiel-Payloads gegen das Event-Schema, in CI integriert).
 
 ### Changed
 - README.md übernimmt die Rolle der Hauptdokumentation (README.txt entfernt).
