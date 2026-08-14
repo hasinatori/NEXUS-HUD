@@ -67,7 +67,7 @@ jobs:
         run: python3 scripts/check-version.py
 
   go:
-    name: Go (Bus, S-C, S-E, hello-check)
+    name: Go (Bus, S-C, S-E, HUD, hello-check)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -80,6 +80,37 @@ jobs:
         run: go build ./...
       - name: Go test
         run: go test ./...
+
+  e2e:
+    name: E2E (Bus + S-E + Prototype-HUD)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.24"
+      - name: Binaries bauen
+        run: go build -o /tmp/nexus-e2e ./cmd/bus ./services/s-e-monitor ./scripts/prototype-hud
+      - name: End-to-End-Test
+        run: |
+          set -e
+          BUS_PID=""
+          SE_PID=""
+          trap 'kill $BUS_PID $SE_PID 2>/dev/null || true' EXIT
+          /tmp/nexus-e2e/bus >/tmp/nexus-bus.log 2>&1 &
+          BUS_PID=$!
+          sleep 1
+          /tmp/nexus-e2e/s-e-monitor -metrics-interval 2s -git-dir "$GITHUB_WORKSPACE" -git-interval 3s \
+            -build-log /tmp/nexus-build.log -build-project ci >/tmp/nexus-se.log 2>&1 &
+          SE_PID=$!
+          sleep 3
+          /tmp/nexus-e2e/prototype-hud -test -window 10s \
+            -expect "event.system.hello:bus,event.system.metrics:S-E,event.git.status:S-E,event.build.failed:S-E" &
+          HUD_PID=$!
+          sleep 3
+          echo "src/main.go:12: error: undefined: foo" >> /tmp/nexus-build.log
+          wait "$HUD_PID"
+          echo "E2E erfolgreich: alle erwarteten Events empfangen."
 
   node:
     name: Node/TS (S-D)

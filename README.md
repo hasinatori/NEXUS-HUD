@@ -11,7 +11,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet zudem System-Metriken, Git-Status und Build-Ergebnisse als Events. S-A (UI) folgt.
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet zudem System-Metriken, Git-Status und Build-Ergebnisse als Events. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) folgt.
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
@@ -181,6 +181,15 @@ Voraussetzungen: Go 1.24+, Node.js 24+ und Rust/Cargo 1.85+ (`sudo apt-get insta
    ```
 
 Jeder Service sendet nach dem Verbinden `event.system.hello` und wiederholt es alle 5 s, damit `hello-check` die Services unabhängig vom Verbindungszeitpunkt erkennt. Details zum Handshake: [ARCHITECTURE.md](./ARCHITECTURE.md) Abschnitt 3.3.
+
+**Live-HUD (optional)** — zeigt Metriken, Git-Status und Build-Ergebnis an:
+
+```sh
+go run ./scripts/prototype-hud
+```
+
+Mit `-test` und `-expect` dient der Prototype-HUD als End-to-End-Prüfung
+(wird in der CI automatisch ausgeführt), siehe `scripts/prototype-hud/README.md`.
 
 ### Repo-Setup (Windows-Dev)
 1. Repository klonen.
