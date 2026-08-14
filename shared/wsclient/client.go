@@ -25,6 +25,9 @@ type Client struct {
 	ServiceID string
 	Version   string
 
+	// OnMessage wird bei jeder eingehenden Notification des Busses aufgerufen.
+	OnMessage func(raw json.RawMessage)
+
 	mu     sync.Mutex
 	conn   *websocket.Conn
 	closed bool
@@ -161,13 +164,17 @@ func (c *Client) ensureConnected(ctx context.Context) error {
 
 func (c *Client) readLoop(conn *websocket.Conn) {
 	for {
-		if _, _, err := conn.Read(context.Background()); err != nil {
+		_, data, err := conn.Read(context.Background())
+		if err != nil {
 			c.mu.Lock()
 			if c.conn == conn {
 				c.conn = nil
 			}
 			c.mu.Unlock()
 			return
+		}
+		if c.OnMessage != nil {
+			c.OnMessage(append([]byte(nil), data...))
 		}
 	}
 }

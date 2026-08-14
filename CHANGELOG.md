@@ -16,6 +16,8 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 - Generator `scripts/generate-schema.py` erzeugt `shared/bus/events.schema.gen.go` aus dem Schema; CI prüft die Konsistenz der generierten Datei.
 - `shared/wsclient`: wiederverwendbarer `Client` mit Auto-Reconnect und Notification-Send (Hello inkl. `source`/`protocol_version`/`ts`).
 - S-E Monitor: System-Metriken (`event.system.metrics`, CPU/RAM via `/proc`), Git-Status (`event.git.status`, Branch/staged/uncommitted/ahead-behind) und Build-Log-Parser (`event.build.succeeded`/`event.build.failed`) mit Flags `-metrics-interval`, `-git-dir`, `-git-interval`, `-build-log`, `-build-project`.
+- `scripts/prototype-hud`: Terminal-HUD als S-A-Stand-in (Live-Ansicht + `-test`-Modus mit `-expect`-Prüfung); läuft als E2E-Job in der CI gegen Bus + S-E.
+- `shared/wsclient`: optionaler `OnMessage`-Callback für eingehende Bus-Events.
 - Projektstruktur: Modul-Ordner S-A bis S-E (`services/`), gemeinsame Basis (`shared/`).
 - Architektur-Spec (`ARCHITECTURE.md`) inkl. IPC-Protokoll (Named Pipes / WebSocket, JSON-RPC 2.0).
 - IPC-Event-Schema (`schema/events.schema.json`).
