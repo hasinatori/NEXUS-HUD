@@ -132,6 +132,12 @@ VALID = [
     },
     {
         "jsonrpc": "2.0",
+        "id": "cmd-2",
+        "method": "cmd.automation.run",
+        "params": {"source": "S-A", "protocol_version": 1, "task": "backup"},
+    },
+    {
+        "jsonrpc": "2.0",
         "method": "error.protocol",
         "params": {
             "source": "S-A",
@@ -212,6 +218,11 @@ INVALID = [
         "jsonrpc": "2.0",
         "method": "event.automation.finished",
         "params": {"source": "S-C", "protocol_version": 1, "id": "r1", "name": "t"},  # exit_code fehlt
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "cmd.automation.run",  # task fehlt
+        "params": {"source": "S-A", "protocol_version": 1},
     },
     {
         "jsonrpc": "2.0",

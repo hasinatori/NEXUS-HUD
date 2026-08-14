@@ -82,7 +82,7 @@ jobs:
         run: go test ./...
 
   e2e:
-    name: E2E (Bus + S-E + Prototype-HUD)
+    name: E2E (Bus + S-E + S-C + Prototype-HUD)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -92,25 +92,44 @@ jobs:
       - name: Binaries bauen
         run: |
           mkdir -p /tmp/nexus-e2e
-          go build -o /tmp/nexus-e2e/ ./cmd/bus ./services/s-e-monitor ./scripts/prototype-hud
+          go build -o /tmp/nexus-e2e/ ./cmd/bus ./services/s-e-monitor ./services/s-c-automation ./scripts/prototype-hud
+      - name: S-C-Konfiguration anlegen
+        run: |
+          mkdir -p /tmp/nexus-inbox
+          cat > /tmp/nexus-automations.json <<'EOF'
+          {
+            "tasks": {
+              "echo-ok": {"command": ["sh", "-c", "echo OK"], "timeout_ms": 10000},
+              "fail-task": {"command": ["sh", "-c", "exit 4"], "timeout_ms": 10000}
+            },
+            "watchers": [
+              {"path": "/tmp/nexus-inbox", "triggers": ["created"], "then": "echo-ok"}
+            ]
+          }
+          EOF
       - name: End-to-End-Test
         run: |
           set -e
           BUS_PID=""
           SE_PID=""
-          trap 'kill $BUS_PID $SE_PID 2>/dev/null || true' EXIT
+          SC_PID=""
+          trap 'kill $BUS_PID $SE_PID $SC_PID 2>/dev/null || true' EXIT
           /tmp/nexus-e2e/bus >/tmp/nexus-bus.log 2>&1 &
           BUS_PID=$!
           sleep 1
           /tmp/nexus-e2e/s-e-monitor -metrics-interval 2s -git-dir "$GITHUB_WORKSPACE" -git-interval 3s \
             -build-log /tmp/nexus-build.log -build-project ci >/tmp/nexus-se.log 2>&1 &
           SE_PID=$!
+          /tmp/nexus-e2e/s-c-automation -config /tmp/nexus-automations.json >/tmp/nexus-sc.log 2>&1 &
+          SC_PID=$!
           sleep 3
           /tmp/nexus-e2e/prototype-hud -test -window 10s \
-            -expect "event.system.hello:bus,event.system.metrics:S-E,event.git.status:S-E,event.build.failed:S-E" &
+            -cmd cmd.automation.run -cmd-params '{"task":"fail-task"}' \
+            -expect "event.system.hello:bus,event.system.metrics:S-E,event.git.status:S-E,event.build.failed:S-E,event.automation.started:S-C,event.automation.finished:S-C,event.file.changed:S-C" &
           HUD_PID=$!
           sleep 3
           echo "src/main.go:12: error: undefined: foo" >> /tmp/nexus-build.log
+          echo "neu" > /tmp/nexus-inbox/datei.txt
           wait "$HUD_PID"
           echo "E2E erfolgreich: alle erwarteten Events empfangen."
 

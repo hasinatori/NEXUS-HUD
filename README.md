@@ -11,7 +11,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet zudem System-Metriken, Git-Status und Build-Ergebnisse als Events. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) folgt.
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet System-Metriken, Git-Status und Build-Ergebnisse; S-C führt Automationen (File-Watch, Tasks) aus. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) folgt.
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
@@ -72,9 +72,9 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Lead:** Developer C
 * **Tech-Stack:** `Go (Golang)` oder `Node.js / Python`
 * **Hauptaufgaben:**
-  * [ ] **File-Watcher System:** Überwachung von Ordnern (z.B. Downloads, Screenshots) auf Datei-Änderungen.
-  * [ ] **Task-Runner Engine:** Ausführen lokaler Aktionen (z.B. Dateien konvertieren, Skripte triggern, Aufräum-Pipelines).
-  * [ ] **Node/Workflow Engine Parser:** Logik zur Verarbeitung einfacher "IF THIS THEN THAT"-Regeln.
+  * [x] **File-Watcher System:** Überwachung von Ordnern (z.B. Downloads, Screenshots) auf Datei-Änderungen.
+  * [x] **Task-Runner Engine:** Ausführen lokaler Aktionen (z.B. Dateien konvertieren, Skripte triggern, Aufräum-Pipelines).
+  * [ ] **Node/Workflow Engine Parser:** IF-THIS-THEN-THAT-Regeln — v1 als JSON (Trigger → Task) umgesetzt, Bedingungen (`IF`) folgen.
 * **Deliverable:** Ein autonomer Hintergrund-Dienst, der Custom-Automationen ausführt.
 
 ---
@@ -124,7 +124,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Waypoints:**
   * [ ] **S-A:** Dashboard-Grid lässt sich konfigurieren.
   * [ ] **S-B:** App-Launcher & Global Hotkeys funktionieren.
-  * [ ] **S-C:** Erste File-Watcher-Automatisierung läuft stabil.
+  * [x] **S-C:** Erste File-Watcher-Automatisierung läuft stabil (Trigger → Task, v1).
   * [ ] **S-D:** Spotify-Steuerung ist voll funktionsfähig.
   * [ ] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
 

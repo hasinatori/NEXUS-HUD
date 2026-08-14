@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "echo-ok": {
+      "command": ["sh", "-c", "echo OK"],
+      "timeout_ms": 10000
+    },
+    "beispiel-aufraeumen": {
+      "command": ["sh", "-c", "find . -name '*.tmp' -delete"],
+      "timeout_ms": 30000
+    }
+  },
+  "watchers": [
+    {
+      "path": "/tmp/nexus-inbox",
+      "triggers": ["created", "changed"],
+      "then": "beispiel-aufraeumen"
+    }
+  ]
+}
