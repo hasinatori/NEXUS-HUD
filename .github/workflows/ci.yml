@@ -81,6 +81,18 @@ jobs:
       - name: Go test
         run: go test ./...
 
+  dotnet:
+    name: C# (S-A Bus + ViewModels headless)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Headless-Tests (xunit)
+        working-directory: tests/s-a-ui-shell
+        run: dotnet test
+
   e2e:
     name: E2E (Bus + S-E + S-C + Prototype-HUD)
     runs-on: ubuntu-latest

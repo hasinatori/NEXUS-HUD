@@ -36,6 +36,8 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 - Versionierung: zentrale `VERSION.json` (Projektversion + Modulzähler), abgeleitete Modulversionen in `shared/version/version.go` (Go), `Cargo.toml` (S-B) und `package.json` (S-D); Versionen werden aus `CARGO_PKG_VERSION`/`version` gespeist statt hartkodiert.
 - Release-Skripte `scripts/check-version.py` (Konsistenzprüfung), `scripts/bump-version.py` (Bump + CHANGELOG-Schnitt) und `scripts/release-notes.py` (Notizen extrahieren).
 - CI-Job „Version-Konsistenz" (prüft VERSION.json gegen alle abgeleiteten Dateien).
+- S-A `BusClient` mit Reconnect-Loop (`Connected`/`Disconnected`-Events, erneutes Hello je Verbindung, `StopAsync`); `MainWindow` auf die neue API umgestellt.
+- Headless-C#-Tests `tests/s-a-ui-shell` (xunit, `net8.0`): testen `BusClient` (Connect/Hello, Auto-Reconnect nach Bus-Ausfall, Disconnected-Event, Send ohne Verbindung wirft), `Protocol` und `MainViewModel` — laufen auf Linux/Crostini und in CI (neuer Job „C# (S-A Bus + ViewModels headless)").
 - `.github/workflows/release.yml`: bereitet per „Run workflow" einen Release-PR vor (Branch `release/vX.Y.Z`, Versions-Bump, CHANGELOG-Schnitt).
 - `.github/workflows/tag.yml`: setzt nach Merge eines Release-PRs automatisch Tag `vX.Y.Z` und erstellt das GitHub Release.
 - `.github/workflows/publish.yml`: veröffentlicht GitHub Releases für manuell gepushte Tags `vX.Y.Z` (Pre-Release bis v1.0.0).
