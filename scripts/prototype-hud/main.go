@@ -65,6 +65,8 @@ func main() {
 	testMode := flag.Bool("test", false, "Testmodus: Events sammeln und Erwartungen prüfen")
 	window := flag.Duration("window", 10*time.Second, "Testfenster (nur mit -test)")
 	expects := flag.String("expect", "", "Erwartete Events (nur mit -test), Komma-getrennt: method[:source]")
+	cmdMethod := flag.String("cmd", "", "Methode, die nach dem Verbinden gesendet wird (z. B. cmd.automation.run)")
+	cmdParams := flag.String("cmd-params", "{}", "JSON-params für -cmd")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -82,6 +84,22 @@ func main() {
 	if err := c.Connect(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", serviceID, err)
 		os.Exit(1)
+	}
+
+	if *cmdMethod != "" {
+		var params map[string]any
+		if err := json.Unmarshal([]byte(*cmdParams), &params); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: ungültige -cmd-params: %v\n", serviceID, err)
+			os.Exit(1)
+		}
+		if params == nil {
+			params = map[string]any{}
+		}
+		if err := c.Notify(ctx, *cmdMethod, params); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: -cmd senden: %v\n", serviceID, err)
+			os.Exit(1)
+		}
+		fmt.Printf("[%s] gesendet: %s\n", serviceID, *cmdMethod)
 	}
 
 	if *testMode {

@@ -362,6 +362,30 @@ const eventsSchemaJSON = `{
       "if": {
         "properties": {
           "method": {
+            "const": "cmd.automation.run"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "task"
+            ],
+            "properties": {
+              "task": {
+                "description": "Name des auszuführenden Tasks (in der S-C-Konfiguration definiert).",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
             "const": "error.protocol"
           }
         }

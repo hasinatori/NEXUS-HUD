@@ -28,10 +28,16 @@ go run ./scripts/prototype-hud
 # Testmodus mit Erwartungen:
 go run ./scripts/prototype-hud -test -window 10s \
   -expect "event.system.hello:bus,event.system.metrics:S-E,event.git.status:S-E,event.build.failed:S-E"
+
+# Testmodus plus Kommando senden (z. B. Automation in S-C anstoßen):
+go run ./scripts/prototype-hud -test -window 10s \
+  -cmd cmd.automation.run -cmd-params '{"task":"backup"}' \
+  -expect "event.automation.started:S-C,event.automation.finished:S-C"
 ```
 
 Flags: `-port`, `-test`, `-window` (Testfenster, Standard 10 s), `-expect`
-(Erwartete Events, Komma-getrennt, Format `method[:source]`).
+(Erwartete Events, Komma-getrennt, Format `method[:source]`), `-cmd` + `-cmd-params`
+(Methode samt JSON-params, die nach dem Verbinden gesendet werden).
 
 ## Tests
 
