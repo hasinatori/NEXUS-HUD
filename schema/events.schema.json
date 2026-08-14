@@ -64,9 +64,147 @@
         "service_id": {
           "description": "Eindeutige ID des sendenden Services (z.B. bei event.system.hello).",
           "type": "string"
+        },
+        "ts": {
+          "description": "Zeitstempel als ISO-8601-String (RFC3339).",
+          "type": "string"
         }
       }
     }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "method": { "const": "event.system.hello" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["service_id", "version", "ts"],
+            "properties": {
+              "version": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.system.metrics" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["cpu", "ram", "ts"],
+            "properties": {
+              "cpu": { "description": "CPU-Auslastung in Prozent.", "type": "number" },
+              "gpu_temp_c": { "description": "GPU-Temperatur in Grad Celsius.", "type": "number" },
+              "ram": {
+                "type": "object",
+                "required": ["used_mb", "total_mb"],
+                "properties": {
+                  "used_mb": { "type": "number" },
+                  "total_mb": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "method": { "enum": ["event.build.failed", "event.build.succeeded"] } }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["project", "ok", "ts"],
+            "properties": {
+              "project": { "description": "Name des gebauten Projekts.", "type": "string" },
+              "ok": { "description": "true bei Erfolg, false bei Fehler.", "type": "boolean" },
+              "task": { "description": "Optionaler Name der Build-Aufgabe.", "type": "string" },
+              "duration_ms": { "description": "Build-Dauer in Millisekunden.", "type": "number" },
+              "output": { "description": "Letzte Log-Zeile bzw. Fehlerausgabe.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.git.status" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["repo_path", "branch", "ts"],
+            "properties": {
+              "repo_path": { "description": "Absoluter Pfad des Git-Repos.", "type": "string" },
+              "branch": { "description": "Aktiver Branch (leer bei detached HEAD).", "type": "string" },
+              "staged": { "description": "Anzahl gestagter Änderungen.", "type": "integer", "minimum": 0 },
+              "uncommitted": { "description": "Anzahl uncommitteter Änderungen.", "type": "integer", "minimum": 0 },
+              "ahead": { "description": "Commits vor dem Upstream.", "type": "integer", "minimum": 0 },
+              "behind": { "description": "Commits hinter dem Upstream.", "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.file.changed" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["path", "change", "ts"],
+            "properties": {
+              "path": { "description": "Absoluter Pfad der geänderten Datei.", "type": "string" },
+              "change": {
+                "type": "string",
+                "enum": ["create", "write", "remove", "rename", "chmod"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.automation.started" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["id", "name", "ts"],
+            "properties": {
+              "id": { "description": "Eindeutige Ausführungs-ID.", "type": "string" },
+              "name": { "description": "Name des Tasks.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.automation.finished" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["id", "name", "exit_code", "ts"],
+            "properties": {
+              "id": { "description": "Eindeutige Ausführungs-ID.", "type": "string" },
+              "name": { "description": "Name des Tasks.", "type": "string" },
+              "exit_code": { "description": "Exit-Code des ausgeführten Prozesses.", "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "error.protocol" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["code", "message", "ts"],
+            "properties": {
+              "code": { "description": "JSON-RPC-Fehlercode.", "type": "integer" },
+              "message": { "description": "Kurze Fehlerbeschreibung.", "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

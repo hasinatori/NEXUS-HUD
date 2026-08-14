@@ -43,4 +43,6 @@ funktionsfähig; Versionierung und Release-Setup eingerichtet (siehe `docs/relea
     Lockfiles — Kommentare dort nicht möglich) und generierte Dateien
     (`shared/version/version.go` — wird vom Bump-Skript überschrieben).
 - JSON-Schema in `schema/events.schema.json` ist die single source of truth für IPC-Verträge.
+  Bei jeder Schema-Änderung die generierte Bus-Kopie neu erzeugen und committen:
+  `python3 scripts/generate-schema.py` (erzeugt `shared/bus/events.schema.gen.go`).
 - Sicherheitsrelevantes bitte über SECURITY.md melden, nicht als öffentliches Issue.

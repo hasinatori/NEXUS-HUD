@@ -1,5 +1,7 @@
 package bus
 
+// Zuletzt geändert: 2026-08-14
+
 import (
 	"context"
 	"encoding/json"
@@ -81,6 +83,49 @@ func readMethod(t *testing.T, conn *websocket.Conn) (string, map[string]any) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 	return m.Method, m.Params
+}
+
+func TestValidateParamsPerEvent(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  string
+		code int
+	}{
+		{"metrics ohne cpu", `{"jsonrpc":"2.0","method":"event.system.metrics","params":{"source":"S-E","protocol_version":1,"ts":"2026-08-14T10:00:00Z"}}`, CodeInvalidParams},
+		{"metrics ohne ram", `{"jsonrpc":"2.0","method":"event.system.metrics","params":{"source":"S-E","protocol_version":1,"cpu":10,"ts":"2026-08-14T10:00:00Z"}}`, CodeInvalidParams},
+		{"git.status ohne branch", `{"jsonrpc":"2.0","method":"event.git.status","params":{"source":"S-E","protocol_version":1,"repo_path":"/tmp/r","ts":"2026-08-14T10:00:00Z"}}`, CodeInvalidParams},
+		{"build.failed ohne ok", `{"jsonrpc":"2.0","method":"event.build.failed","params":{"source":"S-E","protocol_version":1,"project":"X","ts":"2026-08-14T10:00:00Z"}}`, CodeInvalidParams},
+		{"hello ohne service_id", `{"jsonrpc":"2.0","method":"event.system.hello","params":{"source":"S-A","protocol_version":1}}`, CodeInvalidParams},
+		{"unbekanntes top-level feld", `{"jsonrpc":"2.0","method":"event.system.hello","params":{"source":"S-A","protocol_version":1,"service_id":"x","version":"1","ts":"t"},"foo":1}`, CodeInvalidParams},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			verr := ValidateParams([]byte(tc.raw))
+			if verr == nil {
+				t.Fatal("expected protocol error, got none")
+			}
+			if verr.Code != tc.code {
+				t.Fatalf("code = %d, want %d", verr.Code, tc.code)
+			}
+		})
+	}
+}
+
+func TestValidateParamsValidEvents(t *testing.T) {
+	cases := []string{
+		`{"jsonrpc":"2.0","method":"event.system.hello","params":{"source":"S-B","protocol_version":1,"service_id":"s-b-macro-launchpad","version":"0.2.0","ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"event.system.metrics","params":{"source":"S-E","protocol_version":1,"cpu":34.2,"ram":{"used_mb":6400,"total_mb":16384},"ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"event.git.status","params":{"source":"S-E","protocol_version":1,"repo_path":"/home/sam/NEXUS","branch":"main","staged":0,"uncommitted":2,"ahead":1,"behind":0,"ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"event.build.succeeded","params":{"source":"S-E","protocol_version":1,"project":"NEXUS-HUD","ok":true,"duration_ms":1250,"ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"event.file.changed","params":{"source":"S-C","protocol_version":1,"path":"/tmp/f.txt","change":"write","ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"event.automation.finished","params":{"source":"S-C","protocol_version":1,"id":"r1","name":"t","exit_code":0,"ts":"2026-08-14T10:00:00Z"}}`,
+		`{"jsonrpc":"2.0","method":"error.protocol","params":{"source":"S-A","protocol_version":1,"code":-32602,"message":"x","ts":"2026-08-14T10:00:00Z"}}`,
+	}
+	for i, raw := range cases {
+		if verr := ValidateParams([]byte(raw)); verr != nil {
+			t.Fatalf("Fall %d unerwartet abgelehnt: %+v", i, verr)
+		}
+	}
 }
 
 func TestServerBroadcastAndErrors(t *testing.T) {

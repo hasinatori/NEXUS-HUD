@@ -1,4 +1,5 @@
 // Package bus implementiert den lokalen WebSocket-Bus (Phase-1-Transport).
+// Zuletzt geändert: 2026-08-14
 // Er bindet nur auf 127.0.0.1, validiert eingehende Nachrichten gegen die
 // IPC-Regeln aus schema/events.schema.json und verteilt gültige Nachrichten
 // an alle verbundenen Clients.
@@ -145,6 +146,9 @@ func (s *Server) readLoop(c *client) {
 		}
 
 		msg, verr := Parse(data)
+		if verr == nil {
+			verr = ValidateParams(data)
+		}
 		if verr != nil {
 			s.send(c, ErrorProtocol(verr.Code, verr.Message))
 			s.Log.Printf("Ungueltige Nachricht abgelehnt (%s): code=%d %q", c.addr, verr.Code, verr.Message)
