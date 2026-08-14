@@ -11,7 +11,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet System-Metriken, Git-Status und Build-Ergebnisse; S-C führt Automationen (File-Watch, Tasks) aus. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) folgt.
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet System-Metriken, Git-Status und Build-Ergebnisse; S-C führt Automationen (File-Watch, Tasks) aus. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) besitzt einen reconnectfähigen Bus-Client; die Linux-kompilierbaren C#-Teile sind headless per xunit getestet (CI-Job „C#").
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
@@ -49,7 +49,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
   * [ ] Erstellung des Hauptfensters (Frameless Overlay, Snapping für 2. Monitor).
   * [ ] Dark-Mode / Cyberpunk UI Design & Grid Layout.
   * [ ] Komponenten-Bibliothek für Widgets (Gauges, Knöpfe, Status-Badges).
-  * [ ] Anbindung der lokalen WebSocket/Named-Pipe-Schnittstelle zum Empfang von Events.
+  * [x] Anbindung der lokalen WebSocket-Schnittstelle (Bus-Client mit Reconnect, Empfang von Events; Named Pipes folgen mit Phase 2).
 * **Deliverable:** Eine voll bedienbare UI, die Daten via JSON entgegennimmt und darstellt.
 
 ---

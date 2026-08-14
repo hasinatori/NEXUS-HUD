@@ -1,9 +1,10 @@
 # tests/ — Test-Scaffolding
 
-<!-- Zweck: Ort für alle Tests des NEXUS HUD, je Modul getrennt. Aktuell Planungsstand. -->
+<!-- Zweck: Ort für alle Tests des NEXUS HUD, je Modul getrennt. -->
+<!-- Zuletzt geändert: 2026-08-14 -->
 
 Aufteilung:
-- `s-a-ui-shell/` — Tests für die UI (Widget-Rendering, Layout, Event-Anbindung).
+- `s-a-ui-shell/` — Headless-C#-Tests (xunit) für BusClient (Reconnect), Protocol und MainViewModel.
 - `s-b-macro-launchpad/` — Tests für Hotkeys, Launcher, Window-/Clipboard-Manager.
 - `s-c-automation/` — Tests für File-Watcher, Task-Runner, Regel-Engine.
 - `s-d-integrations/` — Tests für Spotify/Discord/WhatsApp-Services (mit Mock-Servern).

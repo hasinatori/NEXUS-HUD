@@ -2,9 +2,11 @@
 
 <!-- Zweck: Das Hauptfenster (frameless Overlay auf dem 2. Monitor) und die komplette
      Widget-Oberfläche. Reine Darstellung — keine Geschäftslogik, keine OS-/API-Zugriffe. -->
-<!-- Zuletzt geändert: 2026-08-13 -->
+<!-- Zuletzt geändert: 2026-08-14 -->
 
-**Stack:** `C# (.NET 8 / WinUI 3)` — Build/Test nur auf Windows (siehe `docs/dev-env.md`)
+**Stack:** `C# (.NET 8 / WinUI 3)` — UI-Build nur auf Windows (siehe `docs/dev-env.md`);
+reine C#-Teile (Bus, ViewModels) sind Linux-kompilierbar und headless getestet
+(`tests/s-a-ui-shell`, xunit, läuft auch in CI).
 
 Hauptaufgaben:
 - [ ] Hauptfenster (Frameless Overlay, Snapping für 2. Monitor).
@@ -20,12 +22,16 @@ Unpackaged WinUI-3-App (`.NET 8`, Windows App SDK 1.6) als `services/s-a-ui-shel
 - `App.xaml[.cs]` — Theme (Cyberpunk Dark, Brushes unter `Nexus.*`) + App-Bootstrap.
 - `MainWindow.xaml[.cs]` — Fenster: Kopfzeile (Status + Hello-Zähler), Widget-Platzhalter.
 - `Bus/Protocol.cs` — JSON-RPC-2.0-Hello-Builder (Feldnamen exakt nach Schema, `ts` = RFC3339).
-- `Bus/BusClient.cs` — WebSocket-Client (`ws://127.0.0.1:49152/`), Text-Frames.
+- `Bus/BusClient.cs` — WebSocket-Client (`ws://127.0.0.1:49152/`), Text-Frames,
+  Reconnect-Loop (verbindet nach Bus-Ausfall automatisch erneut, `Connected`/`Disconnected`-Events,
+  `StopAsync`).
 - `ViewModels/MainViewModel.cs` — `INotifyPropertyChanged` für `x:Bind` (Status, Zähler, letztes Event).
 
 Verhalten: Beim Start Verbindung zum Bus, danach Hello (`event.system.hello`, Quelle `S-A`),
-anschließend Zähler + letztes Event in der UI. Reine C#-Teile (`Bus/`, `ViewModels/`)
-sind Linux-kompilierbar; XAML/UI nur unter Windows baubar.
+anschließend Zähler + letztes Event in der UI. Fällt die Verbindung weg, reconnectet
+der Client (erneutes Hello je Verbindung). Reine C#-Teile (`Bus/`, `ViewModels/`)
+sind Linux-kompilierbar und headless per `tests/s-a-ui-shell` getestet;
+XAML/UI nur unter Windows baubar.
 
 ## Build & Run (Windows)
 
@@ -40,7 +46,8 @@ dotnet run --no-build
 ```
 
 Noch offen (nächste Schritte auf Windows): Frameless/Transparenz/Always-on-top,
-Dauerhaft-Verbindung mit Reconnect, Widget-Layout, Package/Publish-Profil.
+Widget-Layout, Package/Publish-Profil. Reconnect-Erkennung bei hartem Netzabriss
+(ohne Close-Frame) erfordert noch ein Keepalive/Heartbeat — folgt mit Phase 2.
 
 IPC:
 - Sendet: `cmd.*` (Hotkeys, Launch, Automation, Media).
