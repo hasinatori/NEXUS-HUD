@@ -90,7 +90,9 @@ jobs:
         with:
           go-version: "1.24"
       - name: Binaries bauen
-        run: go build -o /tmp/nexus-e2e ./cmd/bus ./services/s-e-monitor ./scripts/prototype-hud
+        run: |
+          mkdir -p /tmp/nexus-e2e
+          go build -o /tmp/nexus-e2e/ ./cmd/bus ./services/s-e-monitor ./scripts/prototype-hud
       - name: End-to-End-Test
         run: |
           set -e
