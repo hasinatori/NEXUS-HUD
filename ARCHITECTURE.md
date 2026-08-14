@@ -121,6 +121,7 @@ In der Phase 1 wiederholen die Service-Stubs das Hello alle 5 s, damit `scripts/
 * Jede Nachricht trägt `protocol_version` im `params`-Objekt (aktuell `1`).
 * Mismatch (`protocol_version` != erwartet) wird vom Empfänger mit dem Fehlerformat (Abschnitt 3.5) beantwortet und die Verbindung geschlossen.
 * Das JSON-Schema in `schema/events.schema.json` ist die single source of truth; Änderungen am Event-Katalog erhöhen die `protocol_version`.
+* Event-spezifische `params`-Pflichtfelder (z.B. `cpu`/`ram` bei `event.system.metrics`) sind im Schema über `if/then` definiert. Der Bus validiert jede eingehende Nachricht gegen das eingebettete Schema (`shared/bus/events.schema.gen.go`, generiert per `scripts/generate-schema.py`) und antwortet bei Verstößen mit `error.protocol` (`-32602`). Verstöße schließen die Verbindung **nicht** (nur `protocol_version`-Mismatch schließt).
 
 ### 3.5 Fehlerformat
 

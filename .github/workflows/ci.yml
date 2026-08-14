@@ -31,6 +31,10 @@ jobs:
         run: |
           pip install --quiet jsonschema
           python tests/schema/validate_events.py
+      - name: Schema-Generierung konsistent (Bus-Embed)
+        run: |
+          python3 scripts/generate-schema.py
+          git diff --exit-code
 
   structure-check:
     name: Struktur-Check (S-A bis S-E)

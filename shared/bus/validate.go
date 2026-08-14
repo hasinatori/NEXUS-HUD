@@ -1,9 +1,14 @@
 package bus
 
+// Zuletzt geändert: 2026-08-14
+
 import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sync"
+
+	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
 // ProtocolError beschreibt eine abgelehnte Nachricht.
@@ -50,6 +55,38 @@ var (
 		"error.protocol":            true,
 	}
 )
+
+var (
+	schemaOnce sync.Once
+	schema     *jsonschema.Schema
+	schemaErr  error
+)
+
+// eventSchema lädt das eingebettete Event-Schema (single source of truth,
+// siehe schema/events.schema.json) genau einmal und gibt es zurück.
+func eventSchema() (*jsonschema.Schema, error) {
+	schemaOnce.Do(func() {
+		schema, schemaErr = jsonschema.CompileString("nexus://events.schema.json", eventsSchemaJSON)
+	})
+	return schema, schemaErr
+}
+
+// ValidateParams prüft eine eingehende Nachricht zusätzlich gegen das
+// Event-Schema (event-spezifische params-Anforderungen, ARCHITECTURE.md 3.3).
+func ValidateParams(data []byte) *ProtocolError {
+	sch, err := eventSchema()
+	if err != nil {
+		return &ProtocolError{Code: CodeInvalidParams, Message: "Eingebettetes Event-Schema nicht ladbar"}
+	}
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		return &ProtocolError{Code: CodeInvalidRequest, Message: "Ungueltige JSON-RPC-2.0-Nachricht"}
+	}
+	if err := sch.Validate(v); err != nil {
+		return &ProtocolError{Code: CodeInvalidParams, Message: fmt.Sprintf("Event entspricht nicht dem Schema: %v", err)}
+	}
+	return nil
+}
 
 // Parse validiert eine eingehende Nachricht gegen die IPC-Regeln.
 // Im Fehlerfall wird ein ProtocolError zurückgegeben; Close ist nur bei

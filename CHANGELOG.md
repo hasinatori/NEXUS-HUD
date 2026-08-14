@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- Zweck: Übersicht aller nennenswerten Änderungen, Format nach Keep a Changelog. -->
-<!-- Zuletzt geändert: 2026-08-13 -->
+<!-- Zuletzt geändert: 2026-08-14 -->
 
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
@@ -11,6 +11,9 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Schema: event-spezifische `params`-Pflichtfelder per `if/then` (u.a. `event.system.metrics` mit `cpu`/`ram`, `event.git.status`, `event.build.*` mit `project`/`ok`, `event.file.changed`, `event.automation.*`, `error.protocol`).
+- Bus-Härtung: Der Bus validiert eingehende Nachrichten gegen das eingebettete Event-Schema (`shared/bus/events.schema.gen.go`) und beantwortet Verstöße mit `error.protocol` (`-32602`).
+- Generator `scripts/generate-schema.py` erzeugt `shared/bus/events.schema.gen.go` aus dem Schema; CI prüft die Konsistenz der generierten Datei.
 - Projektstruktur: Modul-Ordner S-A bis S-E (`services/`), gemeinsame Basis (`shared/`).
 - Architektur-Spec (`ARCHITECTURE.md`) inkl. IPC-Protokoll (Named Pipes / WebSocket, JSON-RPC 2.0).
 - IPC-Event-Schema (`schema/events.schema.json`).
