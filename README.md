@@ -1,6 +1,6 @@
 # NEXUS HUD — Desktop Command Center
 
-<!-- Zuletzt geändert: 2026-08-13 -->
+<!-- Zuletzt geändert: 2026-08-14 -->
 
 > **Das ultimative Overlay & Dashboard auf dem 2. Monitor für Devs, Gamer & Power-User.**
 > *Kein trockenes Office-Tool, sondern eine Performance-Engine für Automation, Shortcuts & System-Monitoring.*
@@ -11,7 +11,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-A (UI) folgt.
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet zudem System-Metriken, Git-Status und Build-Ergebnisse als Events. S-A (UI) folgt.
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
