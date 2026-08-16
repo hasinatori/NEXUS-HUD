@@ -161,6 +161,9 @@ jobs:
       - name: TypeScript-Typen prüfen
         working-directory: services/s-d-integrations
         run: npm run typecheck
+      - name: Tests (Mock-Server, kein Netz/keine Credentials)
+        working-directory: services/s-d-integrations
+        run: npm test
 
   rust:
     name: Rust (S-B)

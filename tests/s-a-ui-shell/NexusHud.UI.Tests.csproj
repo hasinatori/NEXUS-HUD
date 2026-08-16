@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Zuletzt geändert: 2026-08-14 -->
+  <!-- Zuletzt geändert: 2026-08-16 -->
   <!-- Headless-Tests für die Linux-kompilierbaren C#-Teile von S-A
-       (Bus/ + ViewModels/). Läuft auf Linux (Crostini/CI) und Windows. -->
+       (Bus/ + ViewModels/ + Widgets/). Läuft auf Linux (Crostini/CI) und Windows. -->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -26,6 +26,9 @@
     <Compile Include="../../services/s-a-ui-shell/Bus/BusClient.cs" Link="Bus/BusClient.cs" />
     <Compile Include="../../services/s-a-ui-shell/Bus/Protocol.cs" Link="Bus/Protocol.cs" />
     <Compile Include="../../services/s-a-ui-shell/ViewModels/MainViewModel.cs" Link="ViewModels/MainViewModel.cs" />
+    <Compile Include="../../services/s-a-ui-shell/ViewModels/WidgetViewModel.cs" Link="ViewModels/WidgetViewModel.cs" />
+    <Compile Include="../../services/s-a-ui-shell/ViewModels/DashboardViewModel.cs" Link="ViewModels/DashboardViewModel.cs" />
+    <Compile Include="../../services/s-a-ui-shell/Widgets/WidgetLayout.cs" Link="Widgets/WidgetLayout.cs" />
   </ItemGroup>
 
 </Project>

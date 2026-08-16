@@ -5,6 +5,14 @@
 # MD022 – Überschriften direkt von Listen gefolgt (kompakter Doku-Stil)
 # MD032 – Listen direkt unter Überschriften/Labels (z. B. "**IPC:**" gefolgt von Liste)
 # MD036 – Fett-Einzeiler statt Überschriften (z. B. "**Ziele:**")
+ignores:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/target/**"
+  - "**/bin/**"
+  - "**/obj/**"
+globs:
+  - "**/*.{md,mdx}"
 config:
   default: true
   MD013: false

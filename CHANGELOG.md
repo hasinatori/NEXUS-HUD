@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- Zweck: Übersicht aller nennenswerten Änderungen, Format nach Keep a Changelog. -->
-<!-- Zuletzt geändert: 2026-08-14 -->
+<!-- Zuletzt geändert: 2026-08-16 -->
 
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
@@ -11,6 +11,12 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- S-D Spotify-Service: OAuth2-Refresh-Flow (`spotify/auth.ts`), API-Client (`spotify/client.ts`, injizierbares `fetch`), `toMediaState`-Mapping und `SpotifySession` mit Auto-Refresh + 401-Retry; `index.ts` sendet `event.media.state` (Poll, nur bei Änderung) und verarbeitet `cmd.media.toggle`/`next`/`volume`; aktivierbar über `SPOTIFY_CLIENT_ID`/`SECRET`/`REFRESH_TOKEN`, sonst bleibt S-D Hello-Stub. Base-URLs per `SPOTIFY_API_BASE`/`SPOTIFY_TOKEN_URL` überschreibbar.
+- Schema: `event.media.state` (playing/track/artist/album/album_art_url/duration_ms/progress_ms) und `cmd.media.volume` (`volume` 0–100) mit `params`-Pflichtfeldern; `events.schema.gen.go` regeneriert; Schema-Tests erweitert.
+- S-D-Tests `tests/s-d-integrations/spotify.test.mjs` (node:test gegen lokalen Mock-Server, keine Credentials) — in CI-Job „Node/TS (S-D)" integriert (`npm test`).
+- S-A Widget-Layout: konfigurierbares Dashboard-Grid (`Widgets/WidgetLayout.cs` mit JSON-Parsing/Validierung, Standard-Layout `layout.json`, `DashboardViewModel` mit `ObservableCollection<WidgetViewModel>` und `SetStatus`) — headless per xunit getestet.
+- S-A Keepalive: `BusClient` sendet periodisch `event.system.heartbeat` (Schema-konform, Standard 5 s) und erkennt harte Netzabriffe ohne Close-Frame über einen Watchdog (Abort nach ausbleibendem Inbound-Frame, Standard 15 s); beides per Konstruktor `keepAliveInterval`/`keepAliveTimeout` konfigurierbar, in `MainWindow` aktiviert.
+- Headless-C#-Tests: Heartbeat-Senden (`event.system.heartbeat` mit `source`/`service_id`/`ts`) und Watchdog-Reconnect gegen einen stillen Testserver (kein Close-Frame).
 - Schema: event-spezifische `params`-Pflichtfelder per `if/then` (u.a. `event.system.metrics` mit `cpu`/`ram`, `event.git.status`, `event.build.*` mit `project`/`ok`, `event.file.changed`, `event.automation.*`, `error.protocol`).
 - Bus-Härtung: Der Bus validiert eingehende Nachrichten gegen das eingebettete Event-Schema (`shared/bus/events.schema.gen.go`) und beantwortet Verstöße mit `error.protocol` (`-32602`).
 - Generator `scripts/generate-schema.py` erzeugt `shared/bus/events.schema.gen.go` aus dem Schema; CI prüft die Konsistenz der generierten Datei.
