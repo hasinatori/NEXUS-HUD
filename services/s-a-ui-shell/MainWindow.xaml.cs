@@ -6,10 +6,16 @@ using NexusHud.UI.ViewModels;
 
 namespace NexusHud.UI;
 
-// Zuletzt geändert: 2026-08-14
+// Zuletzt geändert: 2026-08-16
 public sealed partial class MainWindow : Window
 {
-    private readonly BusClient _bus = new(new Uri("ws://127.0.0.1:49152/"));
+    private static readonly TimeSpan KeepAliveInterval = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan KeepAliveTimeout = TimeSpan.FromSeconds(15);
+
+    private readonly BusClient _bus = new(
+        new Uri("ws://127.0.0.1:49152/"),
+        keepAliveInterval: KeepAliveInterval,
+        keepAliveTimeout: KeepAliveTimeout);
 
     public MainViewModel Vm { get; } = new();
 

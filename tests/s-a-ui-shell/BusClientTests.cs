@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text.Json;
 using NexusHud.UI.Bus;
@@ -5,11 +6,14 @@ using Xunit;
 
 namespace NexusHud.UI.Tests;
 
-// Zuletzt geändert: 2026-08-14
-// BusClient: Hello senden, Empfang von Server-Frames, Auto-Reconnect nach Abriss.
+// Zuletzt geändert: 2026-08-16
+// BusClient: Hello senden, Empfang von Server-Frames, Auto-Reconnect nach Abriss,
+// Heartbeat-Senden und Watchdog-Erkennung bei hartem Netzabriss (ohne Close-Frame).
 
 public sealed class BusClientTests
 {
+    private const string HelloJson = "{\"jsonrpc\":\"2.0\",\"method\":\"event.system.hello\",\"params\":{\"source\":\"bus\"}}";
+
     private static async Task UntilAsync(Func<bool> condition, int timeoutMs = 5000)
     {
         var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
@@ -50,7 +54,7 @@ public sealed class BusClientTests
         Assert.Equal("0.2.0-s-a.1", p.GetProperty("version").GetString());
         Assert.False(string.IsNullOrEmpty(p.GetProperty("ts").GetString()));
 
-        await server.SendAsync("{\"jsonrpc\":\"2.0\",\"method\":\"event.system.hello\",\"params\":{\"source\":\"bus\"}}");
+        await server.SendAsync(HelloJson);
         await UntilAsync(() => received.Count >= 1);
         Assert.Contains("event.system.hello", received[0]);
 
@@ -116,6 +120,66 @@ public sealed class BusClientTests
         await server.CloseLastConnectionAsync();
 
         await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await bus.StopAsync();
+        await runTask;
+    }
+
+    [Fact]
+    public async Task Heartbeat_Wird_Periodisch_Gesendet()
+    {
+        await using var server = new TestWsServer();
+        var bus = new BusClient(server.Uri, reconnectDelay: TimeSpan.FromMilliseconds(100), keepAliveInterval: TimeSpan.FromMilliseconds(100));
+        var runTask = bus.RunAsync(() => bus.SendHelloAsync("S-A", "s-a-ui-shell", "0.2.0-s-a.1", 1));
+
+        await UntilAsync(() => server.ConnectionCount >= 1);
+
+        // Ohne Watchdog kein Inbound -> Heartbeats fließen vom Client zum Server.
+        await UntilAsync(() => server.Received.Count(m => m.Contains("\"event.system.heartbeat\"")) >= 2);
+
+        var heartbeat = server.Received.First(m => m.Contains("\"event.system.heartbeat\""));
+        using var doc = JsonDocument.Parse(heartbeat);
+        Assert.Equal("event.system.heartbeat", doc.RootElement.GetProperty("method").GetString());
+        var p = doc.RootElement.GetProperty("params");
+        Assert.Equal("S-A", p.GetProperty("source").GetString());
+        Assert.Equal(1, p.GetProperty("protocol_version").GetInt32());
+        Assert.Equal("s-a-ui-shell", p.GetProperty("service_id").GetString());
+        Assert.False(string.IsNullOrEmpty(p.GetProperty("ts").GetString()));
+
+        await bus.StopAsync();
+        await runTask;
+    }
+
+    [Fact]
+    public async Task HarteNetzunterbrechung_Ohne_Close_Frame_Fuehrt_Zu_Reconnect()
+    {
+        await using var server = new TestWsServer();
+        var bus = new BusClient(
+            server.Uri,
+            reconnectDelay: TimeSpan.FromMilliseconds(100),
+            keepAliveTimeout: TimeSpan.FromMilliseconds(400));
+        long helloCount = 0;
+        long disconnectedCount = 0;
+
+        bus.Disconnected += () => Interlocked.Increment(ref disconnectedCount);
+
+        var runTask = bus.RunAsync(
+            () =>
+            {
+                Interlocked.Increment(ref helloCount);
+                return bus.SendHelloAsync("S-A", "s-a-ui-shell", "0.2.0-s-a.1", 1);
+            });
+
+        await UntilAsync(() => server.ConnectionCount >= 1);
+        await UntilAsync(() => Interlocked.Read(ref helloCount) >= 1);
+
+        // Server bleibt verbunden, sendet aber nie etwas (simulierter harter Abriss:
+        // der Client bekommt keinen Close-Frame). Der Watchdog muss die Verbindung
+        // nach keepAliveTimeout per Abort beenden -> Reconnect.
+        await UntilAsync(() => server.ConnectionCount >= 2, 8000);
+        await UntilAsync(() => Interlocked.Read(ref helloCount) >= 2, 8000);
+
+        Assert.True(Interlocked.Read(ref disconnectedCount) >= 1);
+
         await bus.StopAsync();
         await runTask;
     }

@@ -126,9 +126,31 @@ VALID = [
     },
     {
         "jsonrpc": "2.0",
+        "method": "event.media.state",
+        "params": {
+            "source": "S-D",
+            "protocol_version": 1,
+            "playing": True,
+            "track": "Neon Sun",
+            "artist": "System Overdrive",
+            "album": "Night Drive",
+            "album_art_url": "https://example.com/cover.jpg",
+            "duration_ms": 224000,
+            "progress_ms": 42000,
+            "ts": "2026-08-16T10:00:00Z",
+        },
+    },
+    {
+        "jsonrpc": "2.0",
         "id": "cmd-1",
         "method": "cmd.media.toggle",
         "params": {"source": "S-A", "protocol_version": 1},
+    },
+    {
+        "jsonrpc": "2.0",
+        "id": "cmd-2",
+        "method": "cmd.media.volume",
+        "params": {"source": "S-A", "protocol_version": 1, "volume": 40},
     },
     {
         "jsonrpc": "2.0",

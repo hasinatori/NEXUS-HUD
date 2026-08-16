@@ -1,0 +1,51 @@
+{
+  "rows": 4,
+  "columns": 4,
+  "widgets": [
+    {
+      "id": "cpu-gauge",
+      "kind": "gauge",
+      "title": "CPU",
+      "row": 0,
+      "column": 0,
+      "row_span": 1,
+      "column_span": 1
+    },
+    {
+      "id": "ram-gauge",
+      "kind": "gauge",
+      "title": "RAM",
+      "row": 0,
+      "column": 1,
+      "row_span": 1,
+      "column_span": 1
+    },
+    {
+      "id": "git-status",
+      "kind": "git_widget",
+      "title": "Git",
+      "row": 1,
+      "column": 0,
+      "row_span": 1,
+      "column_span": 2
+    },
+    {
+      "id": "media-card",
+      "kind": "media_card",
+      "title": "Media",
+      "row": 2,
+      "column": 0,
+      "row_span": 1,
+      "column_span": 2
+    },
+    {
+      "id": "build-badge",
+      "kind": "build_badge",
+      "title": "Build",
+      "row": 3,
+      "column": 0,
+      "row_span": 1,
+      "column_span": 1
+    }
+  ]
+}

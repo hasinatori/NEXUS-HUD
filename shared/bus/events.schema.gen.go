@@ -362,6 +362,81 @@ const eventsSchemaJSON = `{
       "if": {
         "properties": {
           "method": {
+            "const": "event.media.state"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "playing",
+              "ts"
+            ],
+            "properties": {
+              "playing": {
+                "description": "true bei Wiedergabe, false bei Pause.",
+                "type": "boolean"
+              },
+              "track": {
+                "description": "Name des aktuellen Tracks.",
+                "type": "string"
+              },
+              "artist": {
+                "description": "Künstlername(n), kommagetrennt.",
+                "type": "string"
+              },
+              "album": {
+                "description": "Albumname.",
+                "type": "string"
+              },
+              "album_art_url": {
+                "description": "URL zum Album-Cover.",
+                "type": "string"
+              },
+              "duration_ms": {
+                "description": "Track-Dauer in Millisekunden.",
+                "type": "integer"
+              },
+              "progress_ms": {
+                "description": "Wiedergabeposition in Millisekunden.",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "cmd.media.volume"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "volume"
+            ],
+            "properties": {
+              "volume": {
+                "description": "Ziel-Lautstärke in Prozent (0-100).",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
             "const": "cmd.automation.run"
           }
         }

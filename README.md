@@ -1,6 +1,6 @@
 # NEXUS HUD — Desktop Command Center
 
-<!-- Zuletzt geändert: 2026-08-14 -->
+<!-- Zuletzt geändert: 2026-08-16 -->
 
 > **Das ultimative Overlay & Dashboard auf dem 2. Monitor für Devs, Gamer & Power-User.**
 > *Kein trockenes Office-Tool, sondern eine Performance-Engine für Automation, Shortcuts & System-Monitoring.*
@@ -11,7 +11,7 @@
 
 NEXUS HUD ist ein leichtgewichtiges, performantes Desktop-HUD (Heads-Up-Display), das permanent im Hintergrund oder auf dem Sekundärmonitor läuft. Es verbindet **System-Monitoring, Workflow-Automatisierung, Media-Steuerung und Dev-Monitoring** in einer einzigen, nahtlosen Oberfläche.
 
-> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet System-Metriken, Git-Status und Build-Ergebnisse; S-C führt Automationen (File-Watch, Tasks) aus. Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) besitzt einen reconnectfähigen Bus-Client; die Linux-kompilierbaren C#-Teile sind headless per xunit getestet (CI-Job „C#").
+> **Status:** Phase 1 — IPC-Protokoll v1 und Dev-Bus stehen. S-B bis S-E senden `event.system.hello` (Verifikation über `scripts/hello-check`). S-E meldet System-Metriken, Git-Status und Build-Ergebnisse; S-C führt Automationen (File-Watch, Tasks) aus; S-D besitzt einen Spotify-Service (OAuth2-Refresh, Media-State, `cmd.media.*`, mit Mock-Server-Tests). Der Prototype-HUD zeigt das Ganze live im Terminal und verifiziert es in der CI (E2E-Job). S-A (UI) besitzt einen reconnectfähigen Bus-Client mit Heartbeat/Keepalive und ein konfigurierbares Widget-Grid; die Linux-kompilierbaren C#-Teile sind headless per xunit getestet (CI-Job „C#").
 
 ### Kern-Features
 * **Context Profiles:** Switch per Hotkey zwischen *Dev Mode*, *Gaming Mode* und *AFK/Focus Mode*.
@@ -84,7 +84,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Lead:** Developer D
 * **Tech-Stack:** `Node.js / TypeScript`
 * **Hauptaufgaben:**
-  * [ ] **Spotify Service:** OAuth2 Auth, Play/Pause, Track-Name, Album-Art & Lautstärke via Spotify Web API.
+  * [~] **Spotify Service:** OAuth2-Refresh-Flow, Play/Pause, next/previous, Lautstärke, Track-Name, Album-Art & Progress via Spotify Web API (aktivierbar über `SPOTIFY_*`-Env; ohne Credentials bleibt S-D Hello-Stub).
   * [ ] **Discord Rich Presence & Bot Service:** Status-Updates und Abfangen bestimmter Trigger-Words.
   * [ ] **WhatsApp Webhook / Web-Automation:** Push-Benachrichtigungen bei bestimmten Kontakten/Wörtern auf das HUD weiterleiten.
 * **Deliverable:** Ein Unified-API-Module, das Events von Drittanbieter-Services in das NEXUS HUD einspeist.
