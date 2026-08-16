@@ -2,43 +2,121 @@
     x:Class="NexusHud.UI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="NEXUS HUD">
+    xmlns:widgets="using:NexusHud.UI.Widgets"
+    Title="NEXUS HUD"
+    Background="Transparent"
+    ExtendsContentIntoTitleBar="True"
+    SystemBackdrop="MicaBackdrop"
+    TransparencyLevel="AcrylicBackdrop"
+    Topmost="True">
 
-    <!-- Zuletzt geändert: 2026-08-13 -->
-    <!-- Konstrukt: normales Fenster (Drag/Resize). Overlay-Mode (frameless,
-         transparent, always-on-top) folgt in der Windows-Verfeinerung. -->
+    <!-- Zuletzt geändert: 2026-08-17 -->
+    <!-- Frameless Overlay-Mode: transparent, always-on-top, Mica backdrop.
+         Drag via Header-Grid. Control-Bar für cmd.* Sending. -->
 
-    <Grid Background="{StaticResource Nexus.Background}">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Grid x:Name="RootGrid"
+          Background="Transparent"
+          PointerPressed="OnRootPointerPressed">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Kopfzeile -->
-        <StackPanel Grid.Row="0" Margin="24,20,24,8" Spacing="6">
-            <TextBlock Text="NEXUS HUD" FontSize="28" FontWeight="Bold"
-                       Foreground="{StaticResource Nexus.Accent}" />
-            <TextBlock Text="S-A UI-Shell · WinUI 3 (.NET 8)" FontSize="13"
-                       Foreground="{StaticResource Nexus.Muted}" />
-            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
-                <TextBlock Text="{x:Bind Vm.State, Mode=OneWay}"
+        <!-- Kopfzeile (Drag-Region) -->
+        <Grid Grid.Row="0"
+              Background="Transparent"
+              PointerPressed="OnHeaderPointerPressed"
+              Height="40">
+            <StackPanel Orientation="Horizontal" Margin="16,6,16,0" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="NEXUS HUD" FontSize="16" FontWeight="Bold"
+                           Foreground="{StaticResource Nexus.Accent}" />
+                <TextBlock Text="·" FontSize="16"
                            Foreground="{StaticResource Nexus.Muted}" />
-                <TextBlock Text="{x:Bind Vm.HelloCountString, Mode=OneWay}"
-                           Foreground="{StaticResource Nexus.Muted}" />
+                <TextBlock Text="{x:Bind Vm.State, Mode=OneWay}" FontSize="11"
+                           Foreground="{StaticResource Nexus.Muted}" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind Vm.HelloCountString, Mode=OneWay}" FontSize="11"
+                           Foreground="{StaticResource Nexus.Muted}" VerticalAlignment="Center" />
             </StackPanel>
-        </StackPanel>
 
-        <!-- Widget-Fläche (Platzhalter) -->
-        <Grid Grid.Row="1" Margin="24,8,24,24">
-            <Border Background="{StaticResource Nexus.Panel}"
-                    CornerRadius="12"
-                    BorderBrush="{StaticResource Nexus.Accent}" BorderThickness="1">
-                <TextBlock Text="{x:Bind Vm.LastEvent, Mode=OneWay}"
-                           Foreground="{StaticResource Nexus.Muted}"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Margin="24" />
-            </Border>
+            <Button x:Name="CloseBtn" Content="&#x2715;" FontSize="11"
+                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Margin="0,0,12,0" Width="26" Height="26"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Muted}"
+                    BorderThickness="0" Click="OnCloseClick"
+                    WindowChrome.IsHitTestVisibleInChrome="True" />
+        </Grid>
+
+        <!-- Widget-Grid -->
+        <Grid x:Name="WidgetGrid" Grid.Row="1" Margin="12,2,12,6"
+              Background="{StaticResource Nexus.Panel}"
+              CornerRadius="6"
+              BorderBrush="{StaticResource Nexus.Accent}" BorderThickness="1"
+              Opacity="0.92">
+        </Grid>
+
+        <!-- Control-Bar (cmd.* Buttons) -->
+        <Grid Grid.Row="2" Margin="12,0,12,10"
+              Background="{StaticResource Nexus.Panel}"
+              CornerRadius="6"
+              BorderBrush="{StaticResource Nexus.Muted}" BorderThickness="0.5"
+              Padding="8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Media Controls -->
+            <Button Grid.Column="0" Content="&#x25B6;/&#x23F8;" FontSize="10"
+                    Padding="6,2" Margin="2"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Accent}"
+                    BorderThickness="0.5" BorderBrush="{StaticResource Nexus.Muted}"
+                    Click="OnMediaToggle" ToolTip="Play/Pause (cmd.media.toggle)" />
+            <Button Grid.Column="1" Content="&#x23ED;" FontSize="10"
+                    Padding="6,2" Margin="2"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Accent}"
+                    BorderThickness="0.5" BorderBrush="{StaticResource Nexus.Muted}"
+                    Click="OnMediaNext" ToolTip="Next Track (cmd.media.next)" />
+
+            <!-- App Launcher -->
+            <Button Grid.Column="2" Content="+ App" FontSize="10"
+                    Padding="6,2" Margin="8,2,2,2"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Accent}"
+                    BorderThickness="0.5" BorderBrush="{StaticResource Nexus.Muted}"
+                    Click="OnAppLaunch" ToolTip="App starten (cmd.app.launch)" />
+
+            <!-- Automation -->
+            <Button Grid.Column="3" Content="&#x25B6; Task" FontSize="10"
+                    Padding="6,2" Margin="2"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Accent}"
+                    BorderThickness="0.5" BorderBrush="{StaticResource Nexus.Muted}"
+                    Click="OnAutomationRun" ToolTip="Automation starten (cmd.automation.run)" />
+
+            <!-- Status -->
+            <TextBlock Grid.Column="5" x:Name="StatusBar"
+                       Text="" FontSize="10"
+                       Foreground="{StaticResource Nexus.Muted}"
+                       VerticalAlignment="Center" Margin="8,0,0,0" />
+
+            <!-- Reconnect -->
+            <Button Grid.Column="6" Content="&#x21BB;" FontSize="11"
+                    Padding="6,2" Margin="2"
+                    Background="Transparent" Foreground="{StaticResource Nexus.Muted}"
+                    BorderThickness="0.5" BorderBrush="{StaticResource Nexus.Muted}"
+                    Click="OnReconnect" ToolTip="Bus neu verbinden" />
         </Grid>
     </Grid>
 </Window>

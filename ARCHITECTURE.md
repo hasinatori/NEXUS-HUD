@@ -106,9 +106,13 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 | `event.media.state` | S-D → UI | Track, Album-Art, Play/Pause, Lautstärke. |
 | `event.presence.changed` | S-D → UI | Discord/WhatsApp-Status-Trigger. |
 | `event.profile.switched` | IPC-Bus → alle | Context-Profile gewechselt (Dev/Gaming/AFK). |
+| `event.clipboard.changed` | S-B → UI | Clipboard-Inhalt geändert (Text-Vorschau, Länge). |
 | `cmd.media.toggle` | UI → S-D | Play/Pause-Kommando. |
 | `cmd.app.launch` | UI → S-B | Programm/Spiel starten oder fokussieren. |
 | `cmd.hotkey.register` | UI → S-B | Globalen Hotkey registrieren. |
+| `cmd.window.move` | UI → S-B | Fenster positionieren/verschieben. |
+| `cmd.clipboard.set` | UI → S-B | Clipboard-Inhalt setzen. |
+| `cmd.clipboard.get_history` | UI → S-B | Clipboard-History anfordern. |
 | `cmd.automation.run` | UI → S-C | Automation/Task starten. |
 
 **Hello-World-Definition (Phase 1):** Jeder Service sendet nach Connect
@@ -172,8 +176,8 @@ Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 
 * **Stack:** `C# / C++ / Rust`
 * **Verantwortung:** Global Hotkeys, Process Launcher, Window Manager, Clipboard-Manager.
-* **Sendet:** `event.hotkey.triggered`, `event.process.started`, `event.window.moved`.
-* **Empfängt:** `cmd.hotkey.register`, `cmd.app.launch`, `cmd.window.move`.
+* **Sendet:** `event.hotkey.triggered`, `event.process.started`, `event.window.moved`, `event.clipboard.changed`.
+* **Empfängt:** `cmd.hotkey.register`, `cmd.app.launch`, `cmd.window.move`, `cmd.clipboard.set`, `cmd.clipboard.get_history`.
 
 ### S-C — Automation Engine
 
