@@ -43,6 +43,7 @@ var (
 		"event.automation.finished": true,
 		"event.file.changed":        true,
 		"event.ide.focus":           true,
+		"event.clipboard.changed":  true,
 		"cmd.media.toggle":          true,
 		"cmd.media.next":            true,
 		"cmd.media.volume":          true,
@@ -52,6 +53,8 @@ var (
 		"cmd.automation.run":        true,
 		"cmd.metrics.set_interval":  true,
 		"cmd.git.watch":             true,
+		"cmd.clipboard.set":         true,
+		"cmd.clipboard.get_history": true,
 		"error.protocol":            true,
 	}
 )

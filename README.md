@@ -46,10 +46,12 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Lead:** Developer A
 * **Tech-Stack:** `C# (.NET 8 / WinUI 3)` (Build nur auf Windows, siehe docs/dev-env.md)
 * **Hauptaufgaben:**
-  * [ ] Erstellung des Hauptfensters (Frameless Overlay, Snapping für 2. Monitor).
-  * [ ] Dark-Mode / Cyberpunk UI Design & Grid Layout.
-  * [ ] Komponenten-Bibliothek für Widgets (Gauges, Knöpfe, Status-Badges).
+  * [x] Erstellung des Hauptfensters (Frameless Overlay, Always-on-Top, Mica Backdrop).
+  * [x] Dark-Mode / Cyberpunk UI Design & Grid Layout.
+  * [x] Widget-Grid dynamisch aus layout.json (Gauge, Git, Media, Build Widgets).
   * [x] Anbindung der lokalen WebSocket-Schnittstelle (Bus-Client mit Reconnect, Empfang von Events; Named Pipes folgen mit Phase 2).
+  * [x] Event-Dispatching an Widgets (Metrics, Git, Build, Media).
+  * [ ] Snapping für 2. Monitor (Multi-Monitor-Awareness).
 * **Deliverable:** Eine voll bedienbare UI, die Daten via JSON entgegennimmt und darstellt.
 
 ---
@@ -116,17 +118,17 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Ziel:** Alle Architekturgrundlagen stehen, Module können miteinander sprechen.
 * **Waypoints:**
   * [x] Repo-Setup & Definition des IPC-Protokolls (JSON Schema für Events).
-  * [ ] **S-A:** Skeleton-UI steht auf dem Screen.
+  * [x] **S-A:** Skeleton-UI mit Frameless Overlay, Widget-Grid und Event-Dispatching.
   * [x] **S-B bis S-E:** Grundlegende Services senden "Hello World"-Ping an den Bus.
 
 ### Phase 2: Core Functionality
 * **Ziel:** Die wichtigsten Einzel-Features laufen isoliert.
 * **Waypoints:**
-  * [ ] **S-A:** Dashboard-Grid lässt sich konfigurieren.
-  * [ ] **S-B:** App-Launcher & Global Hotkeys funktionieren.
+  * [x] **S-A:** Dashboard-Grid konfigurierbar (layout.json), Widget-Rendering, Event-Dispatching.
+  * [x] **S-B:** App-Launcher, Global Hotkeys, Window Manager, Clipboard Manager funktionieren.
   * [x] **S-C:** Erste File-Watcher-Automatisierung läuft stabil (Trigger → Task, v1).
   * [ ] **S-D:** Spotify-Steuerung ist voll funktionsfähig.
-  * [ ] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
+  * [x] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
 
 ### Phase 3: Integration & Polish
 * **Ziel:** Die Module greifen ineinander (Context-Switching & Triggerevents).

@@ -38,6 +38,86 @@ public static class Protocol
                 serviceId,
                 DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")));
     }
+
+    public static string CmdMediaToggle()
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.media.toggle",
+            @params = new { source = Source, protocol_version = ProtocolVersion, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdMediaNext()
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.media.next",
+            @params = new { source = Source, protocol_version = ProtocolVersion, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdMediaVolume(int volume)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.media.volume",
+            @params = new { source = Source, protocol_version = ProtocolVersion, volume, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdAppLaunch(string path, string[]? args = null, bool focus = true)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.app.launch",
+            @params = new { source = Source, protocol_version = ProtocolVersion, path, args = args ?? Array.Empty<string>(), focus, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdHotkeyRegister(string hotkeyId, string[] modifiers, string key)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.hotkey.register",
+            @params = new { source = Source, protocol_version = ProtocolVersion, hotkey_id = hotkeyId, modifiers, key, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdWindowMove(string windowTitle, int x, int y, int width, int height)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.window.move",
+            @params = new { source = Source, protocol_version = ProtocolVersion, window_title = windowTitle, x, y, width, height, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdAutomationRun(string task)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.automation.run",
+            @params = new { source = Source, protocol_version = ProtocolVersion, task, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
+
+    public static string CmdClipboardSet(string content)
+    {
+        return JsonSerializer.Serialize(new
+        {
+            jsonrpc = "2.0",
+            method = "cmd.clipboard.set",
+            @params = new { source = Source, protocol_version = ProtocolVersion, content, ts = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'") }
+        });
+    }
 }
 
 public sealed record HelloMessage(

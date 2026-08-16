@@ -52,6 +52,7 @@ const eventsSchemaJSON = `{
         "event.automation.finished",
         "event.file.changed",
         "event.ide.focus",
+        "event.clipboard.changed",
         "cmd.media.toggle",
         "cmd.media.next",
         "cmd.media.volume",
@@ -61,6 +62,8 @@ const eventsSchemaJSON = `{
         "cmd.automation.run",
         "cmd.metrics.set_interval",
         "cmd.git.watch",
+        "cmd.clipboard.set",
+        "cmd.clipboard.get_history",
         "error.protocol"
       ]
     },
@@ -453,6 +456,87 @@ const eventsSchemaJSON = `{
                 "type": "string"
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "event.clipboard.changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "content_type",
+              "preview",
+              "ts"
+            ],
+            "properties": {
+              "content_type": {
+                "description": "Art des Clipboard-Inhalts (text, image, file).",
+                "type": "string",
+                "enum": [
+                  "text",
+                  "image",
+                  "file"
+                ]
+              },
+              "preview": {
+                "description": "Vorschau des Inhalts (erste 200 Zeichen bei Text).",
+                "type": "string"
+              },
+              "length": {
+                "description": "Länge des Inhalts in Zeichen (bei Text).",
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "cmd.clipboard.set"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "description": "Der einzusetzende Clipboard-Inhalt.",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method": {
+            "const": "cmd.clipboard.get_history"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [],
+            "properties": {}
           }
         }
       }
