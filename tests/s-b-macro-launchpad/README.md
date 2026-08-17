@@ -2,10 +2,12 @@
 
 <!-- Zweck: Tests für das Macro- & Launchpad-System (S-B). -->
 
-Geplant:
-- Global Hotkeys: Registrierung/Trigger/Ent-Registrierung (virtuelle Key-Events).
-- Process Launcher: Starten/Fokussieren/Beenden von Prozessen.
-- Window Manager: Fenster-Positionierung auf Monitoren.
-- Clipboard-Manager: Historie und Snippet-Verwaltung.
+Tests sind als inline `#[cfg(test)]`-Module in den jeweiligen Source-Dateien implementiert:
 
-Konvention: Keine echten Eingriffe ins System nötig — mit Test-Harness/Mocks.
+- `bus.rs`: JSON-RPC-Nachrichten-Builder, Serialisierung, Struktur-Validierung.
+- `hotkey.rs`: HotkeyManager (Register/Find/ID-Inkrement), parse_modifiers/parse_vkey (Windows-only).
+- `process.rs`: launch_app Stub-Rückgabewerte (non-Windows).
+- `window.rs`: Stub-Funktionen (find_window, get_window_rect, set_window_pos, etc.).
+- `clipboard.rs`: ClipboardManager (has_changed, set_last_content), ClipboardWatcher.
+
+Ausführung: `cargo test` im Service-Verzeichnis.

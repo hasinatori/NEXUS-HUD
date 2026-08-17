@@ -104,16 +104,29 @@ Alle Nachrichten folgen [JSON-RPC 2.0](https://www.jsonrpc.org/specification):
 | `event.build.succeeded` | S-E → UI | Build erfolgreich. |
 | `event.git.status` | S-E → UI | Branch/Uncommitted/Push-Status. |
 | `event.media.state` | S-D → UI | Track, Album-Art, Play/Pause, Lautstärke. |
-| `event.presence.changed` | S-D → UI | Discord/WhatsApp-Status-Trigger. |
-| `event.profile.switched` | IPC-Bus → alle | Context-Profile gewechselt (Dev/Gaming/AFK). |
+| `event.presence.changed` | S-D → UI | Discord/WhatsApp-Status-Trigger (service, status, activity). |
+| `event.profile.switched` | S-B/S-D → alle | Context-Profile gewechselt (Dev/Gaming/AFK). |
 | `event.clipboard.changed` | S-B → UI | Clipboard-Inhalt geändert (Text-Vorschau, Länge). |
+| `event.call.initiated` | S-D → UI | VoIP-Anruf gestartet (call_id, to, status). |
+| `event.call.ended` | S-D → UI | VoIP-Anruf beendet (call_id, duration_sec). |
+| `event.call.status` | S-D → UI | VoIP-Anruf-Statusabfrage (call_id, to, from, status). |
 | `cmd.media.toggle` | UI → S-D | Play/Pause-Kommando. |
+| `cmd.media.next` | UI → S-D | Naechster Track. |
+| `cmd.media.volume` | UI → S-D | Lautstärke setzen (0-100). |
 | `cmd.app.launch` | UI → S-B | Programm/Spiel starten oder fokussieren. |
 | `cmd.hotkey.register` | UI → S-B | Globalen Hotkey registrieren. |
 | `cmd.window.move` | UI → S-B | Fenster positionieren/verschieben. |
+| `cmd.window.focus` | UI → S-B | Fenster fokussieren. |
 | `cmd.clipboard.set` | UI → S-B | Clipboard-Inhalt setzen. |
 | `cmd.clipboard.get_history` | UI → S-B | Clipboard-History anfordern. |
 | `cmd.automation.run` | UI → S-C | Automation/Task starten. |
+| `cmd.call.make` | UI → S-D | VoIP-Anruf starten (to, optionale TwiML-URL). |
+| `cmd.call.hangup` | UI → S-D | VoIP-Anruf beenden (call_id). |
+| `cmd.call.status` | UI → S-D | VoIP-Anruf-Status abfragen (call_id). |
+| `cmd.profile.switch` | UI → alle | Context-Profil wechseln (dev/gaming/afk). |
+| `cmd.media.set_activity` | S-C/S-A → S-D | Discord-Activity setzen (activity_type, name, details). |
+| `event.automation.rule.triggered` | S-C → UI | Cross-Module Event-Regel ausgeloest (rule_name, event_method). |
+| `error.protocol` | beliebig | Protokollfehler (JSON-RPC-Fehlercode). |
 
 **Hello-World-Definition (Phase 1):** Jeder Service sendet nach Connect
 `event.system.hello` mit `{ "source": "S-B", "service_id": "s-b-macro-launchpad", "version": "0.1.0", "ts": "<ISO8601>" }` — die UI zeigt dies als Status-Badge an.
@@ -182,16 +195,16 @@ Technologie je Modul wie in `README.md` spezifiziert (inkl. Alternativen).
 ### S-C — Automation Engine
 
 * **Stack:** `Go` oder `Node.js / Python`
-* **Verantwortung:** File-Watcher, Task-Runner, IF-THIS-THEN-THAT-Regel-Engine.
-* **Sendet:** `event.automation.started`, `event.automation.finished`, `event.file.changed`.
-* **Empfängt:** `cmd.automation.run`, `event.profile.switched` (aktive Regeln je Profil).
+* **Verantwortung:** File-Watcher, Task-Runner, IF-THIS-THEN-THAT-Regel-Engine mit Bedingungen (Profile, Event-Felder, Rate-Limiting), Profile-System (dev/gaming/afk), Event-Regeln fuer Cross-Module-Automatisierung.
+* **Sendet:** `event.automation.started`, `event.automation.finished`, `event.file.changed`, `event.automation.rule.triggered`.
+* **Empfängt:** `cmd.automation.run`, `cmd.profile.switch`, `event.profile.switched`, `event.build.failed`, `event.build.succeeded`.
 
 ### S-D — Integrated Apps
 
 * **Stack:** `Node.js / TypeScript`
-* **Verantwortung:** Spotify, Discord, WhatsApp → Unified-Events.
-* **Sendet:** `event.media.state`, `event.presence.changed`.
-* **Empfängt:** `cmd.media.toggle`, `cmd.media.next`, `cmd.media.volume`.
+* **Verantwortung:** Spotify, Discord, WhatsApp, VoIP (Twilio) → Unified-Events; Cross-Module Event-Reactions (Build-Fehler -> Discord-Status, Profil-Switch -> Media-Anpassung).
+* **Sendet:** `event.media.state`, `event.presence.changed`, `event.call.initiated`, `event.call.ended`, `event.call.status`.
+* **Empfängt:** `cmd.media.toggle`, `cmd.media.next`, `cmd.media.volume`, `cmd.media.set_activity`, `cmd.call.make`, `cmd.call.hangup`, `cmd.call.status`, `cmd.profile.switch`.
 
 ### S-E — Coding & Build Monitoring
 

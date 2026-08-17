@@ -1,7 +1,7 @@
 # CONTRIBUTING.md
 
 <!-- Zweck: Regeln und Ablauf für Beiträge zum NEXUS HUD (Issues, PRs, Entwicklung). -->
-<!-- Zuletzt geändert: 2026-08-13 -->
+<!-- Zuletzt geändert: 2026-08-17 -->
 
 ## Projekt im Überblick
 NEXUS HUD ist ein Desktop-HUD für den 2. Monitor mit entkoppelter Modul-Architektur
@@ -9,8 +9,10 @@ NEXUS HUD ist ein Desktop-HUD für den 2. Monitor mit entkoppelter Modul-Archite
 - **README.md** — Projektübersicht, Module, Roadmap.
 - **ARCHITECTURE.md** — Technische Spec: IPC, Event-Schema, Security, RAM-Budget.
 
-Aktueller Stand: **Phase 1** — IPC-Protokoll v1, Dev-Bus und Service-Stubs
-funktionsfähig; Versionierung und Release-Setup eingerichtet (siehe `docs/releasing.md`).
+Aktueller Stand: **Phase 2 abgeschlossen, Phase 3 teilweise umgesetzt** — IPC-Protokoll v1,
+Dev-Bus, alle Service-Implementierungen, IF-Bedingungen, Profil-Switching, VoIP-Anrufe
+und Tests für S-B/S-C/S-D stehen (36 IPC-Methoden). Versions-/Release-Prozess:
+siehe `docs/releasing.md`.
 
 ## Entwicklungsumgebung
 - Zielplattform: Windows. Entwicklung/Testing auch auf Linux (Crostini) möglich.
@@ -27,6 +29,10 @@ funktionsfähig; Versionierung und Release-Setup eingerichtet (siehe `docs/relea
 - `schema/events.schema.json` darf nicht ungültig werden (Workflow `check-schema`).
 - Markdown-Dateien müssen lint-frei sein (Workflow `markdownlint`).
 - Die Ordnerstruktur der Module (S-A bis S-E) bleibt erhalten (Workflow `structure-check`).
+- **Rust:** `cargo test` muss grün sein (Workflow `rust`).
+- **S-D (Node/TS):** `npm test` muss grün sein; neue Integrationen brauchen Mock-Server-Tests.
+- **Go:** `go vet`, `go build`, `go test` müssen grün sein.
+- **Schema:** `validate_events.py` muss alle Payloads validieren.
 - **Versionen müssen konsistent sein** (Workflow `version-check`): `VERSION.json`,
   `shared/version/version.go`, `Cargo.toml` (S-B) und `package.json` (S-D) immer
   gemeinsam ändern; bei neuen Features die `[Unreleased]`-Sektion der `CHANGELOG.md`
