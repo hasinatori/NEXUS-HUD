@@ -4,183 +4,159 @@ mod hotkey;
 mod process;
 mod window;
 
-use std::env;
-use std::sync::{Arc, mpsc};
-use std::sync::Mutex;
-
 use futures_util::{SinkExt, StreamExt};
-use tokio::time::{interval, Duration};
-use tokio_tungstenite::connect_async;
-
-use bus::{AppLaunchCmd, HotkeyRegisterCmd, JsonRpcMessage, WindowMoveCmd};
-
-const HELLO_INTERVAL: Duration = Duration::from_secs(5);
-
-#[tokio::main]
-async fn main() {
-    let port = env::var("NEXUS_WS_PORT")
-        .ok()
-        .and_then(|p| p.parse::<u16>().ok())
-        .unwrap_or(49152);
-    let url = format!("ws://127.0.0.1:{port}/");
-
-    let mut hotkey_mgr = hotkey::HotkeyManager::new();
-    let (native_tx, native_rx) = mpsc::channel::<u32>();
-
-    let _hotkey_thread = hotkey::spawn_message_loop(native_tx);
-
-    let (hotkey_async_tx, mut hotkey_async_rx) = tokio::sync::mpsc::unbounded_channel::<u32>();
-
-    std::thread::spawn(move || {
-        while let Ok(id) = native_rx.recv() {
-            let _ = hotkey_async_tx.send(id);
-        }
-    });
-
-    let clipboard_mgr = Arc::new(Mutex::new(clipboard::ClipboardManager::new()));
-    let (clipboard_event_tx, mut clipboard_event_rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-
-    let _clipboard_thread = clipboard::spawn_monitor(clipboard_mgr.clone(), clipboard_event_tx);
-
-    loop {
-        match run(
-            &url,
-            &mut hotkey_mgr,
-            &mut hotkey_async_rx,
-            &mut clipboard_event_rx,
-        )
-        .await
-        {
-            Ok(()) => break,
-            Err(err) => {
-                eprintln!("[s-b-macro-launchpad] Verbindungsfehler: {err}; neuer Versuch in 2 s");
-                tokio::time::sleep(Duration::from_secs(2)).await;
-            }
-        }
-    }
-
-    hotkey_mgr.unregister_all();
-}
-
-async fn run(
-    url: &str,
-    hotkey_mgr: &mut hotkey::HotkeyManager,
-    hotkey_async_rx: &mut tokio::sync::mpsc::UnboundedReceiver<u32>,
-    clipboard_event_rx: &mut tokio::sync::mpsc::UnboundedReceiver<String>,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let (mut ws, _) = connect_async(url).await?;
-    println!("[s-b-macro-launchpad] verbunden mit {url}");
-
-    let mut ticker = interval(HELLO_INTERVAL);
-    loop {
-        tokio::select! {
-            _ = ticker.tick() => {
-                ws.send(bus::make_hello(env!("CARGO_PKG_VERSION")).into()).await?;
-            }
-
-            Some(hotkey_id) = hotkey_async_rx.recv() => {
-                if let Some(name) = hotkey_mgr.find_by_id(hotkey_id) {
-                    let name_clone = name.clone();
-                    ws.send(bus::make_hotkey_triggered(&name_clone).into()).await?;
-                    println!("[s-b] Hotkey ausgelöst: {name_clone}");
-                }
-            }
-
-            Some(clipboard_event) = clipboard_event_rx.recv() => {
-                ws.send(clipboard_event.into()).await?;
-            }
-
-            msg = ws.next() => match msg {
-                Some(Ok(text)) => {
-                    if let Ok(raw) = text.to_text() {
-                        handle_message(raw, hotkey_mgr, &mut ws).await?;
-                    }
-                }
-                Some(Err(err)) => return Err(err.into()),
-                None => return Ok(()),
-            },
-        }
-    }
-}
+use tokio_tungstenite::tungstenite::Message;
 
 async fn handle_message(
-    raw: &str,
+    raw: String,
     hotkey_mgr: &mut hotkey::HotkeyManager,
-    ws: &mut (impl SinkExt<String, Error = Box<dyn std::error::Error + Send + Sync>> + Unpin),
-) -> Result<(), Box<dyn std::error::Error>> {
-    let msg: JsonRpcMessage = match serde_json::from_str(raw) {
-        Ok(m) => m,
-        Err(_) => return Ok(()),
-    };
+    ws: &mut (impl SinkExt<Message, Error = tokio_tungstenite::tungstenite::Error> + Unpin),
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let v: serde_json::Value = serde_json::from_str(&raw)?;
+    let method = v.get("method").and_then(|m| m.as_str()).unwrap_or("");
 
-    match msg.method.as_str() {
+    match method {
         "cmd.hotkey.register" => {
-            if let Ok(cmd) = serde_json::from_value::<HotkeyRegisterCmd>(msg.params) {
-                match hotkey_mgr.register(&cmd) {
-                    Ok(()) => {
-                        println!("[s-b] Hotkey '{}' registriert", cmd.hotkey_id);
-                    }
-                    Err(e) => {
-                        eprintln!("[s-b] Hotkey-Registrierung fehlgeschlagen: {e}");
-                    }
-                }
+            let cmd: bus::HotkeyRegisterCmd =
+                serde_json::from_value(v.get("params").cloned().unwrap_or_default())?;
+            match hotkey_mgr.register(&cmd) {
+                Ok(()) => println!("[s-b] Hotkey registriert: {}", cmd.hotkey_id),
+                Err(e) => eprintln!("[s-b] Hotkey-Fehler: {}", e),
             }
         }
         "cmd.app.launch" => {
-            if let Ok(cmd) = serde_json::from_value::<AppLaunchCmd>(msg.params) {
-                match process::launch(&cmd) {
-                    Ok(pid) => {
-                        ws.send(bus::make_process_started(pid, &cmd.path).into()).await?;
-                    }
-                    Err(e) => {
-                        eprintln!("[s-b] Prozessstart fehlgeschlagen: {e}");
-                    }
+            let cmd: bus::AppLaunchCmd =
+                serde_json::from_value(v.get("params").cloned().unwrap_or_default())?;
+            match process::launch_app(&cmd.path, &cmd.args, cmd.focus) {
+                Ok(pid) => {
+                    let event = bus::make_process_started(pid, &cmd.path);
+                    ws.send(Message::Text(event.into())).await?;
                 }
+                Err(e) => eprintln!("[s-b] App-Start fehlgeschlagen: {}", e),
             }
         }
         "cmd.window.move" => {
-            if let Ok(cmd) = serde_json::from_value::<WindowMoveCmd>(msg.params) {
-                match window::move_window(&cmd) {
-                    Ok(()) => {
-                        ws.send(
-                            bus::make_window_moved(
-                                &cmd.window_title,
-                                cmd.x,
-                                cmd.y,
-                                cmd.width,
-                                cmd.height,
-                            )
-                            .into(),
-                        )
-                        .await?;
-                    }
-                    Err(e) => {
-                        eprintln!("[s-b] Fenster-Verschiebung fehlgeschlagen: {e}");
-                    }
-                }
+            let cmd: bus::WindowMoveCmd =
+                serde_json::from_value(v.get("params").cloned().unwrap_or_default())?;
+            if let Some(hwnd) = window::find_window(&cmd.window_title) {
+                window::set_window_pos(hwnd, cmd.x, cmd.y, cmd.width, cmd.height);
+                let event =
+                    bus::make_window_moved(&cmd.window_title, cmd.x, cmd.y, cmd.width, cmd.height);
+                ws.send(Message::Text(event.into())).await?;
+            }
+        }
+        "cmd.window.focus" => {
+            let title = v
+                .get("params")
+                .and_then(|p| p.get("window_title"))
+                .and_then(|t| t.as_str())
+                .unwrap_or("");
+            if let Some(hwnd) = window::find_window(title) {
+                window::focus_window(hwnd);
             }
         }
         "cmd.clipboard.set" => {
-            if let Some(content) = msg.params.get("content").and_then(|c| c.as_str()) {
-                if clipboard::set_text(content) {
-                    println!("[s-b] Clipboard-Inhalt gesetzt ({} Zeichen)", content.len());
-                } else {
-                    eprintln!("[s-b] Clipboard setzen fehlgeschlagen");
-                }
-            }
+            let text = v
+                .get("params")
+                .and_then(|p| p.get("text"))
+                .and_then(|t| t.as_str())
+                .unwrap_or("");
+            let _ = clipboard::ClipboardWatcher::new().set_text(text);
         }
-        "cmd.clipboard.get_history" => {
-            println!("[s-b] Clipboard-History angefordert");
+        _ => {
+            eprintln!("[s-b] Unbekannte Methode: {}", method);
         }
-        "event.system.hello" => {
-            if let Some(source) = msg.params.get("source").and_then(|s| s.as_str()) {
-                if source != bus::SOURCE {
-                    println!("[s-b] Anderer Service verbunden: {source}");
-                }
-            }
-        }
-        _ => {}
     }
 
     Ok(())
+}
+
+#[tokio::main]
+async fn main() {
+    let server_url = std::env::var("SERVER_URL").unwrap_or_else(|_| "ws://localhost:8080/ws".into());
+    let version = env!("CARGO_PKG_VERSION");
+
+    println!("[s-b] Starte s-b-macro-launchpad v{}", version);
+    println!("[s-b] Verbinde zu {}...", server_url);
+
+    let (ws_stream, _) = tokio_tungstenite::connect_async(&server_url)
+        .await
+        .expect("[s-b] Verbindung fehlgeschlagen");
+    println!("[s-b] Verbunden!");
+
+    let (mut ws_write, mut read) = ws_stream.split();
+
+    let hello = bus::make_hello(version);
+    ws_write.send(Message::Text(hello.into())).await.unwrap();
+
+    let mut hotkey_mgr = hotkey::HotkeyManager::new();
+
+    let (std_event_tx, std_event_rx) = std::sync::mpsc::channel::<String>();
+    let clipboard_watcher = clipboard::ClipboardWatcher::new();
+    clipboard_watcher.start(std_event_tx);
+
+    let (std_hotkey_tx, std_hotkey_rx) = std::sync::mpsc::channel::<u32>();
+    let _msg_loop_handle = hotkey::spawn_message_loop(std_hotkey_tx);
+
+    let (tokio_event_tx, mut tokio_event_rx) = tokio::sync::mpsc::channel::<String>(32);
+    let (tokio_hotkey_tx, mut tokio_hotkey_rx) = tokio::sync::mpsc::channel::<u32>(32);
+
+    std::thread::spawn(move || {
+        while let Ok(event) = std_event_rx.recv() {
+            if tokio_event_tx.blocking_send(event).is_err() {
+                break;
+            }
+        }
+    });
+
+    std::thread::spawn(move || {
+        while let Ok(id) = std_hotkey_rx.recv() {
+            if tokio_hotkey_tx.blocking_send(id).is_err() {
+                break;
+            }
+        }
+    });
+
+    loop {
+        tokio::select! {
+            msg = read.next() => {
+                match msg {
+                    Some(Ok(Message::Text(text))) => {
+                        match handle_message(text.to_string(), &mut hotkey_mgr, &mut ws_write).await {
+                            Ok(()) => {}
+                            Err(e) => eprintln!("[s-b] Fehler: {}", e),
+                        }
+                    }
+                    Some(Ok(Message::Close(_))) => {
+                        println!("[s-b] Verbindung geschlossen");
+                        break;
+                    }
+                    Some(Err(e)) => {
+                        eprintln!("[s-b] WebSocket-Fehler: {}", e);
+                        break;
+                    }
+                    None => {
+                        println!("[s-b] Stream beendet");
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            Some(event) = tokio_event_rx.recv() => {
+                if ws_write.send(Message::Text(event.into())).await.is_err() {
+                    eprintln!("[s-b] WebSocket Send-Fehler");
+                    break;
+                }
+            }
+            Some(hotkey_id) = tokio_hotkey_rx.recv() => {
+                if let Some(hotkey_id_str) = hotkey_mgr.find_by_id(hotkey_id) {
+                    let id = hotkey_id_str.clone();
+                    let event = bus::make_hotkey_triggered(&id);
+                    if ws_write.send(Message::Text(event.into())).await.is_err() {
+                        eprintln!("[s-b] WebSocket Send-Fehler");
+                    }
+                }
+            }
+        }
+    }
 }
