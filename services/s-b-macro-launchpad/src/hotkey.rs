@@ -239,6 +239,16 @@ impl HotkeyManager {
         }
     }
 
+    pub fn clear_all(&mut self) {
+        #[cfg(windows)]
+        {
+            for (_, id) in &self.registered {
+                win::unregister_hotkey(*id);
+            }
+        }
+        self.registered.clear();
+    }
+
     pub fn find_by_id(&self, win_id: u32) -> Option<&String> {
         self.registered
             .iter()
@@ -262,4 +272,182 @@ pub fn spawn_message_loop(tx: std::sync::mpsc::Sender<u32>) -> std::thread::Join
             }
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_cmd(hotkey_id: &str, modifiers: Vec<&str>, key: &str) -> crate::bus::HotkeyRegisterCmd {
+        crate::bus::HotkeyRegisterCmd {
+            source: "S-A".into(),
+            protocol_version: 1,
+            hotkey_id: hotkey_id.into(),
+            modifiers: modifiers.into_iter().map(String::from).collect(),
+            key: key.into(),
+        }
+    }
+
+    #[test]
+    fn test_hotkey_manager_new_is_empty() {
+        let mgr = HotkeyManager::new();
+        assert!(mgr.registered.is_empty());
+        assert_eq!(mgr.next_id, 1);
+    }
+
+    #[test]
+    fn test_hotkey_manager_register_assigns_incrementing_ids() {
+        let mut mgr = HotkeyManager::new();
+        let cmd1 = make_cmd("hk-1", vec!["ctrl"], "F1");
+        let cmd2 = make_cmd("hk-2", vec!["alt"], "F2");
+
+        mgr.register(&cmd1).unwrap();
+        mgr.register(&cmd2).unwrap();
+
+        assert_eq!(mgr.registered.len(), 2);
+        assert_eq!(mgr.next_id, 3);
+    }
+
+    #[test]
+    fn test_hotkey_manager_find_by_id() {
+        let mut mgr = HotkeyManager::new();
+        let cmd = make_cmd("my-hotkey", vec!["ctrl"], "A");
+        mgr.register(&cmd).unwrap();
+
+        assert_eq!(mgr.find_by_id(1), Some(&"my-hotkey".to_string()));
+        assert_eq!(mgr.find_by_id(999), None);
+    }
+
+    #[test]
+    fn test_hotkey_manager_find_by_id_after_multiple() {
+        let mut mgr = HotkeyManager::new();
+        mgr.register(&make_cmd("first", vec!["ctrl"], "F1")).unwrap();
+        mgr.register(&make_cmd("second", vec!["alt"], "F2")).unwrap();
+        mgr.register(&make_cmd("third", vec!["shift"], "F3")).unwrap();
+
+        assert_eq!(mgr.find_by_id(1), Some(&"first".to_string()));
+        assert_eq!(mgr.find_by_id(2), Some(&"second".to_string()));
+        assert_eq!(mgr.find_by_id(3), Some(&"third".to_string()));
+        assert_eq!(mgr.find_by_id(4), None);
+    }
+
+    #[test]
+    fn test_hotkey_manager_register_duplicate_id_replaces() {
+        let mut mgr = HotkeyManager::new();
+        let cmd = make_cmd("dup", vec!["ctrl"], "F1");
+        mgr.register(&cmd).unwrap();
+        assert_eq!(mgr.next_id, 2);
+
+        mgr.register(&cmd).unwrap();
+        assert_eq!(mgr.registered.len(), 1);
+        assert_eq!(mgr.next_id, 3);
+    }
+
+    #[test]
+    fn test_hotkey_manager_clear_all() {
+        let mut mgr = HotkeyManager::new();
+        mgr.register(&make_cmd("hk-1", vec!["ctrl"], "F1")).unwrap();
+        mgr.register(&make_cmd("hk-2", vec!["alt"], "F2")).unwrap();
+        assert_eq!(mgr.registered.len(), 2);
+
+        mgr.clear_all();
+        assert_eq!(mgr.registered.len(), 0);
+        assert_eq!(mgr.next_id, 3);
+    }
+
+    #[cfg(windows)]
+    mod windows_parse_tests {
+        use super::super::win;
+
+        #[test]
+        fn test_parse_modifiers_alt() {
+            let result = win::parse_modifiers(&["Alt".into()]);
+            assert_eq!(result, 0x0001);
+        }
+
+        #[test]
+        fn test_parse_modifiers_ctrl() {
+            let result = win::parse_modifiers(&["Ctrl".into()]);
+            assert_eq!(result, 0x0002);
+        }
+
+        #[test]
+        fn test_parse_modifiers_shift() {
+            let result = win::parse_modifiers(&["Shift".into()]);
+            assert_eq!(result, 0x0004);
+        }
+
+        #[test]
+        fn test_parse_modifiers_win() {
+            let result = win::parse_modifiers(&["Win".into()]);
+            assert_eq!(result, 0x0008);
+        }
+
+        #[test]
+        fn test_parse_modifiers_combined() {
+            let result = win::parse_modifiers(&["Ctrl".into(), "Shift".into()]);
+            assert_eq!(result, 0x0002 | 0x0004);
+        }
+
+        #[test]
+        fn test_parse_modifiers_case_insensitive() {
+            let result = win::parse_modifiers(&["ctrl".into(), "SHIFT".into()]);
+            assert_eq!(result, 0x0002 | 0x0004);
+        }
+
+        #[test]
+        fn test_parse_modifiers_unknown_ignored() {
+            let result = win::parse_modifiers(&["Ctrl".into(), "Bogus".into()]);
+            assert_eq!(result, 0x0002);
+        }
+
+        #[test]
+        fn test_parse_vkey_f1() {
+            assert_eq!(win::parse_vkey("F1"), Some(0x7A));
+        }
+
+        #[test]
+        fn test_parse_vkey_f12() {
+            assert_eq!(win::parse_vkey("F12"), Some(0x85));
+        }
+
+        #[test]
+        fn test_parse_vkey_letter_a() {
+            assert_eq!(win::parse_vkey("A"), Some(0x41));
+        }
+
+        #[test]
+        fn test_parse_vkey_letter_z() {
+            assert_eq!(win::parse_vkey("Z"), Some(0x5A));
+        }
+
+        #[test]
+        fn test_parse_vkey_space() {
+            assert_eq!(win::parse_vkey("SPACE"), Some(0x20));
+        }
+
+        #[test]
+        fn test_parse_vkey_enter() {
+            assert_eq!(win::parse_vkey("ENTER"), Some(0x0D));
+            assert_eq!(win::parse_vkey("RETURN"), Some(0x0D));
+        }
+
+        #[test]
+        fn test_parse_vkey_case_insensitive() {
+            assert_eq!(win::parse_vkey("f1"), Some(0x7A));
+            assert_eq!(win::parse_vkey("space"), Some(0x20));
+        }
+
+        #[test]
+        fn test_parse_vkey_unknown() {
+            assert_eq!(win::parse_vkey("BOGUS"), None);
+            assert_eq!(win::parse_vkey(""), None);
+        }
+
+        #[test]
+        fn test_parse_vkey_digits() {
+            assert_eq!(win::parse_vkey("0"), Some(0x30));
+            assert_eq!(win::parse_vkey("9"), Some(0x39));
+        }
+    }
 }

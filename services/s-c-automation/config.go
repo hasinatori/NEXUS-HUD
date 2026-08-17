@@ -23,10 +23,12 @@ type TaskDef struct {
 }
 
 // WatcherDef verknüpft einen Ordner (Trigger) mit einem Task (Aktion).
+// Das optionale If-Feld ermoeglicht IF-THIS-THEN-THAT-Logik (Phase 2).
 type WatcherDef struct {
-	Path     string   `json:"path"`
-	Triggers []string `json:"triggers"`
-	Then     string   `json:"then"`
+	Path     string     `json:"path"`
+	Triggers []string   `json:"triggers"`
+	Then     string     `json:"then"`
+	If       *Condition `json:"if,omitempty"`
 }
 
 func (c Config) runnerTask(name string, def TaskDef) runner.Task {
@@ -82,4 +84,46 @@ func loadConfig(path string) (Config, error) {
 		}
 	}
 	return cfg, nil
+}
+
+// StateStore hält den aktuellen Systemzustand fuer die IF-Auswertung.
+type StateStore struct {
+	Profile    string
+	EventState map[string]string
+	RunHistory []RunRecord
+}
+
+// EvalContextFromState erzeugt ein EvalContext aus dem StateStore.
+func (s *StateStore) EvalContext() EvalContext {
+	return EvalContext{
+		Profile:    s.Profile,
+		EventState: s.EventState,
+		RunHistory: s.RunHistory,
+	}
+}
+
+// RecordRun fuegt einen neuen Lauf in die History ein.
+func (s *StateStore) RecordRun(taskName string) {
+	s.RunHistory = append(s.RunHistory, RunRecord{
+		TaskName: taskName,
+		RunAt:    timeNowUnixMillis(),
+	})
+}
+
+// SetProfile aktualisiert das aktuelle Profil.
+func (s *StateStore) SetProfile(profile string) {
+	s.Profile = profile
+}
+
+// SetEventField setzt einen Event-Zustandswert.
+func (s *StateStore) SetEventField(key, value string) {
+	if s.EventState == nil {
+		s.EventState = map[string]string{}
+	}
+	s.EventState[key] = value
+}
+
+// timeNowUnixMillis ist ein Stub fuer time.Now().UnixMilli() (in Tests ueberschreibbar).
+var timeNowUnixMillis = func() int64 {
+	return int64(0)
 }

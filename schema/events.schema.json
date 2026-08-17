@@ -37,17 +37,27 @@
         "event.file.changed",
         "event.ide.focus",
         "event.clipboard.changed",
+        "event.call.initiated",
+        "event.call.ended",
+        "event.call.status",
+        "event.automation.rule.triggered",
         "cmd.media.toggle",
         "cmd.media.next",
         "cmd.media.volume",
+        "cmd.media.set_activity",
         "cmd.app.launch",
         "cmd.hotkey.register",
         "cmd.window.move",
+        "cmd.window.focus",
         "cmd.automation.run",
         "cmd.metrics.set_interval",
         "cmd.git.watch",
         "cmd.clipboard.set",
         "cmd.clipboard.get_history",
+        "cmd.call.make",
+        "cmd.call.hangup",
+        "cmd.call.status",
+        "cmd.profile.switch",
         "error.protocol"
       ]
     },
@@ -214,6 +224,97 @@
       }
     },
     {
+      "if": { "properties": { "method": { "const": "event.presence.changed" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["service", "status", "ts"],
+            "properties": {
+              "service": { "description": "Name des Third-Party-Services (discord, whatsapp).", "type": "string" },
+              "status": { "description": "Aktueller Status.", "type": "string", "enum": ["online", "idle", "dnd", "offline"] },
+              "activity": { "description": "Aktuelle Aktivitaet.", "type": "string" },
+              "activity_type": { "description": "Art der Aktivitaet.", "type": "string", "enum": ["playing", "streaming", "listening", "watching", "competing"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.profile.switched" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["profile", "ts"],
+            "properties": {
+              "profile": { "description": "Name des neuen Profils (dev, gaming, afk).", "type": "string", "enum": ["dev", "gaming", "afk"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.call.initiated" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["call_id", "to", "status", "ts"],
+            "properties": {
+              "call_id": { "description": "Eindeutige Anruf-ID.", "type": "string" },
+              "to": { "description": "Ziel-Telefonnummer.", "type": "string" },
+              "from": { "description": "Absendende Telefonnummer.", "type": "string" },
+              "status": { "description": "Aktueller Anruf-Status.", "type": "string", "enum": ["queued", "ringing", "in-progress", "completed", "failed", "busy", "no-answer", "canceled"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.call.ended" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["call_id", "status", "ts"],
+            "properties": {
+              "call_id": { "description": "Eindeutige Anruf-ID.", "type": "string" },
+              "status": { "description": "Endgueltiger Anruf-Status.", "type": "string" },
+              "duration_sec": { "description": "Gespraechsdauer in Sekunden.", "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.call.status" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["call_id", "to", "from", "status", "ts"],
+            "properties": {
+              "call_id": { "description": "Eindeutige Anruf-ID.", "type": "string" },
+              "to": { "description": "Ziel-Telefonnummer.", "type": "string" },
+              "from": { "description": "Absendende Telefonnummer.", "type": "string" },
+              "status": { "description": "Aktueller Anruf-Status.", "type": "string" },
+              "duration_sec": { "description": "Gespraechsdauer in Sekunden.", "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "event.automation.rule.triggered" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["rule_name", "event_method", "ts"],
+            "properties": {
+              "rule_name": { "description": "Name der ausgeloesten Event-Regel.", "type": "string" },
+              "event_method": { "description": "Das ausloesende IPC-Event.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
       "if": { "properties": { "method": { "const": "cmd.media.volume" } } },
       "then": {
         "properties": {
@@ -227,6 +328,22 @@
       }
     },
     {
+      "if": { "properties": { "method": { "const": "cmd.media.set_activity" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["activity_type", "name"],
+            "properties": {
+              "activity_type": { "description": "Discord-Aktivitaets-Typ (0=Playing, 2=Listening).", "type": "integer", "enum": [0, 2] },
+              "name": { "description": "Name der Aktivitaet.", "type": "string" },
+              "details": { "description": "Zusatzinformationen.", "type": "string" },
+              "state": { "description": "Status-Text.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
       "if": { "properties": { "method": { "const": "cmd.automation.run" } } },
       "then": {
         "properties": {
@@ -234,21 +351,6 @@
             "required": ["task"],
             "properties": {
               "task": { "description": "Name des auszuführenden Tasks (in der S-C-Konfiguration definiert).", "type": "string" }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": { "properties": { "method": { "const": "event.clipboard.changed" } } },
-      "then": {
-        "properties": {
-          "params": {
-            "required": ["content_type", "preview", "ts"],
-            "properties": {
-              "content_type": { "description": "Art des Clipboard-Inhalts (text, image, file).", "type": "string", "enum": ["text", "image", "file"] },
-              "preview": { "description": "Vorschau des Inhalts (erste 200 Zeichen bei Text).", "type": "string" },
-              "length": { "description": "Länge des Inhalts in Zeichen (bei Text).", "type": "integer", "minimum": 0 }
             }
           }
         }
@@ -274,6 +376,59 @@
           "params": {
             "required": [],
             "properties": {}
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "cmd.call.make" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["to"],
+            "properties": {
+              "to": { "description": "Ziel-Telefonnummer (E.164-Format).", "type": "string" },
+              "url": { "description": "Optionale TwiML-URL fuer den Anruf.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "cmd.call.hangup" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["call_id"],
+            "properties": {
+              "call_id": { "description": "ID des zu beendenden Anrufs.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "cmd.call.status" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["call_id"],
+            "properties": {
+              "call_id": { "description": "ID des abzufragenden Anrufs.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "cmd.profile.switch" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["profile"],
+            "properties": {
+              "profile": { "description": "Ziel-Profil (dev, gaming, afk).", "type": "string", "enum": ["dev", "gaming", "afk"] }
+            }
           }
         }
       }

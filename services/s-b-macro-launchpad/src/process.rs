@@ -100,3 +100,34 @@ pub fn launch_app(path: &str, args: &[String], focus: bool) -> Result<u32, Strin
         Ok(1)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_launch_app_returns_ok() {
+        let result = launch_app("/usr/bin/echo", &[], false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_launch_app_returns_pid_1_on_non_windows() {
+        let result = launch_app("/usr/bin/echo", &[], false);
+        #[cfg(not(windows))]
+        assert_eq!(result.unwrap(), 1);
+    }
+
+    #[test]
+    fn test_launch_app_with_args() {
+        let args = vec!["hello".to_string(), "world".to_string()];
+        let result = launch_app("/usr/bin/echo", &args, false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_launch_app_with_focus() {
+        let result = launch_app("/usr/bin/echo", &[], true);
+        assert!(result.is_ok());
+    }
+}

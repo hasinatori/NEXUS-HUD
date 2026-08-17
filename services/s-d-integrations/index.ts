@@ -1,7 +1,8 @@
-// Zuletzt geändert: 2026-08-16
+// Zuletzt geaendert: 2026-08-17
 // S-D — Integrated Apps: verbindet mit dem Dev-Bus, sendet Hello und — sofern
-// Spotify-Credentials gesetzt sind (SPOTIFY_CLIENT_ID/SECRET/REFRESH_TOKEN) —
-// periodisch event.media.state und verarbeitet cmd.media.*-Kommandos.
+// Credentials gesetzt sind — periodisch Events sendet und cmd.*-Kommandos verarbeitet.
+// Spotify: SPOTIFY_*-Env-Vars | Discord: DISCORD_*-Env-Vars |
+// WhatsApp: WHATSAPP_*-Env-Vars | VoIP: TWILIO_*-Env-Vars
 
 import { createRequire } from "module";
 import { dirname, join } from "path";
@@ -11,6 +12,21 @@ import WebSocket from "ws";
 import { loadSpotifyConfig } from "./spotify/config.ts";
 import type { MediaState } from "./spotify/media.ts";
 import { SpotifySession } from "./spotify/session.ts";
+
+import { loadDiscordConfig } from "./discord/config.ts";
+import type { PresenceState } from "./discord/presence.ts";
+import { DiscordSession } from "./discord/session.ts";
+
+import { loadWhatsAppConfig } from "./whatsapp/config.ts";
+import type { WhatsAppMessage } from "./whatsapp/message.ts";
+import { WhatsAppClient } from "./whatsapp/client.ts";
+
+import { loadVoIPConfig } from "./voip/config.ts";
+import type { CallState } from "./voip/call.ts";
+import { VoIPSession } from "./voip/session.ts";
+
+import { handleEventReaction, type ReactionContext } from "./reactions.ts";
+
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
 const VERSION = (require(join(here, "..", "package.json")) as { version: string }).version;
@@ -44,16 +60,38 @@ function hello(): string {
   });
 }
 
-// Spotify nur aktivieren, wenn Credentials vorhanden sind.
+// --- Spotify ---
 const spotifyConfig = loadSpotifyConfig();
 const spotify = spotifyConfig ? new SpotifySession(spotifyConfig) : null;
 
+// --- Discord ---
+const discordConfig = loadDiscordConfig();
+const discord = discordConfig ? new DiscordSession(discordConfig) : null;
+
+// --- WhatsApp ---
+const whatsappConfig = loadWhatsAppConfig();
+const whatsapp = whatsappConfig ? new WhatsAppClient(whatsappConfig.apiUrl, whatsappConfig.apiToken) : null;
+
+// --- VoIP ---
+const voipConfig = loadVoIPConfig();
+const voip = voipConfig ? new VoIPSession(voipConfig) : null;
+
+// --- Aktive Anrufe ---
+const activeCalls = new Map<string, CallState>();
+
+// --- Event-Reactions ---
+const reactionCtx: ReactionContext = {
+  spotify: spotify as unknown as import("./spotify/session.ts").SpotifySession | null,
+  discord: discord as unknown as import("./discord/session.ts").DiscordSession | null,
+  notify,
+  wsSend: (data: string) => ws.send(data),
+};
+
+// --- Spotify Polling ---
 let lastMediaJson = "";
 
 async function pollSpotify(): Promise<void> {
-  if (!spotify) {
-    return;
-  }
+  if (!spotify) return;
   try {
     const state: MediaState | null = await spotify.getCurrentlyPlaying();
     const json = JSON.stringify(state ?? null);
@@ -67,6 +105,28 @@ async function pollSpotify(): Promise<void> {
     console.error(`[${SERVICE_ID}] Spotify-Poll fehlgeschlagen: ${(err as Error).message}`);
   }
 }
+
+// --- Discord Polling ---
+let lastPresenceJson = "";
+
+async function pollDiscord(): Promise<void> {
+  if (!discord) return;
+  try {
+    const userId = process.env.DISCORD_USER_ID ?? "";
+    const guildId = process.env.DISCORD_GUILD_ID ?? "";
+    if (!userId || !guildId) return;
+    const state: PresenceState | null = await discord.getPresence(userId, guildId);
+    const json = JSON.stringify(state ?? null);
+    if (json !== lastPresenceJson) {
+      lastPresenceJson = json;
+      ws.send(notify("event.presence.changed", { service: "discord", ...state }));
+    }
+  } catch (err) {
+    console.error(`[${SERVICE_ID}] Discord-Poll fehlgeschlagen: ${(err as Error).message}`);
+  }
+}
+
+// --- Command Handlers ---
 
 async function handleMediaCommand(method: string, params: Record<string, unknown>): Promise<void> {
   if (!spotify) {
@@ -86,7 +146,7 @@ async function handleMediaCommand(method: string, params: Record<string, unknown
       case "cmd.media.volume": {
         const volume = Number(params.volume);
         if (!Number.isInteger(volume)) {
-          console.warn(`[${SERVICE_ID}] cmd.media.volume ohne gültiges volume (bekam ${params.volume}).`);
+          console.warn(`[${SERVICE_ID}] cmd.media.volume ohne gueltiges volume (bekam ${params.volume}).`);
           return;
         }
         await spotify.setVolume(volume);
@@ -99,6 +159,93 @@ async function handleMediaCommand(method: string, params: Record<string, unknown
     console.error(`[${SERVICE_ID}] ${method} fehlgeschlagen: ${(err as Error).message}`);
   }
 }
+
+async function handleCallCommand(method: string, params: Record<string, unknown>): Promise<void> {
+  if (!voip) {
+    console.warn(`[${SERVICE_ID}] VoIP nicht konfiguriert — ${method} ignoriert.`);
+    return;
+  }
+  try {
+    switch (method) {
+      case "cmd.call.make": {
+        const to = String(params.to ?? "");
+        if (!to) {
+          console.warn(`[${SERVICE_ID}] cmd.call.make ohne Zielnummer.`);
+          return;
+        }
+        const state = await voip.makeCall(to);
+        activeCalls.set(state.callId, state);
+        ws.send(notify("event.call.initiated", {
+          call_id: state.callId,
+          to: state.to,
+          from: state.from,
+          status: state.status,
+        }));
+        break;
+      }
+      case "cmd.call.hangup": {
+        const callId = String(params.call_id ?? "");
+        if (!callId) {
+          console.warn(`[${SERVICE_ID}] cmd.call.hangup ohne call_id.`);
+          return;
+        }
+        await voip.hangupCall(callId);
+        activeCalls.delete(callId);
+        ws.send(notify("event.call.ended", {
+          call_id: callId,
+          status: "completed",
+        }));
+        break;
+      }
+      case "cmd.call.status": {
+        const callId = String(params.call_id ?? "");
+        if (!callId) return;
+        const state = await voip.getCallStatus(callId);
+        if (state) {
+          activeCalls.set(callId, state);
+          ws.send(notify("event.call.status", {
+            call_id: state.callId,
+            to: state.to,
+            from: state.from,
+            status: state.status,
+            duration_sec: state.durationSec ?? 0,
+          }));
+        }
+        break;
+      }
+      default:
+        console.warn(`[${SERVICE_ID}] unbekanntes Call-Kommando: ${method}`);
+    }
+  } catch (err) {
+    console.error(`[${SERVICE_ID}] ${method} fehlgeschlagen: ${(err as Error).message}`);
+  }
+}
+
+async function handleProfileCommand(method: string, params: Record<string, unknown>): Promise<void> {
+  if (method === "cmd.profile.switch") {
+    const profile = String(params.profile ?? "");
+    if (!profile) {
+      console.warn(`[${SERVICE_ID}] cmd.profile.switch ohne profile.`);
+      return;
+    }
+    ws.send(notify("event.profile.switched", { profile }));
+    console.log(`[${SERVICE_ID}] Profil gewechselt: ${profile}`);
+  }
+}
+
+async function handleMessage(method: string, params: Record<string, unknown>): Promise<void> {
+  if (method.startsWith("cmd.media.")) {
+    await handleMediaCommand(method, params);
+  } else if (method.startsWith("cmd.call.")) {
+    await handleCallCommand(method, params);
+  } else if (method.startsWith("cmd.profile.")) {
+    await handleProfileCommand(method, params);
+  } else if (method.startsWith("event.")) {
+    await handleEventReaction(reactionCtx, method, params);
+  }
+}
+
+// --- WebSocket Events ---
 
 ws.on("open", () => {
   console.log(`[${SERVICE_ID}] verbunden mit ${url}`);
@@ -116,6 +263,26 @@ ws.on("open", () => {
   } else {
     console.log(`[${SERVICE_ID}] Spotify nicht konfiguriert (SPOTIFY_CLIENT_ID/SECRET/REFRESH_TOKEN) — reiner Stub.`);
   }
+
+  if (discord) {
+    console.log(`[${SERVICE_ID}] Discord-Service aktiv (Poll alle ${discordConfig!.pollIntervalMs} ms).`);
+    void pollDiscord();
+    setInterval(() => void pollDiscord(), discordConfig!.pollIntervalMs);
+  } else {
+    console.log(`[${SERVICE_ID}] Discord nicht konfiguriert (DISCORD_BOT_TOKEN/APPLICATION_ID) — reiner Stub.`);
+  }
+
+  if (whatsapp) {
+    console.log(`[${SERVICE_ID}] WhatsApp-Service aktiv.`);
+  } else {
+    console.log(`[${SERVICE_ID}] WhatsApp nicht konfiguriert (WHATSAPP_API_URL/API_TOKEN) — reiner Stub.`);
+  }
+
+  if (voip) {
+    console.log(`[${SERVICE_ID}] VoIP-Service aktiv (Twilio).`);
+  } else {
+    console.log(`[${SERVICE_ID}] VoIP nicht konfiguriert (TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM_NUMBER) — reiner Stub.`);
+  }
 });
 
 ws.on("message", (data) => {
@@ -123,11 +290,11 @@ ws.on("message", (data) => {
   try {
     msg = JSON.parse(String(data)) as { method?: unknown; params?: unknown };
   } catch {
-    return; // kein JSON-RPC -> ignorieren
+    return;
   }
-  if (typeof msg?.method === "string" && msg.method.startsWith("cmd.media.")) {
+  if (typeof msg?.method === "string") {
     const params = (msg.params ?? {}) as Record<string, unknown>;
-    void handleMediaCommand(msg.method, params);
+    void handleMessage(msg.method, params);
   }
 });
 
