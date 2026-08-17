@@ -1,25 +1,24 @@
 use std::collections::HashMap;
-use std::sync::mpsc;
-
-use crate::bus::HotkeyRegisterCmd;
 
 #[cfg(windows)]
 mod win {
-    use windows_sys::Win32::UI::WindowsAndMessaging::*;
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::*;
+    use std::sync::mpsc;
+    use std::sync::Mutex;
     use windows_sys::Win32::Foundation::*;
-    use std::ffi::c_void;
+    use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::*;
+    use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
-    pub const WM_HOTKEY: u32 = 0x0312;
+    pub const WM_HOTKEY: u32 = 786;
 
-    pub fn parse_modifiers(mods: &[String]) -> u32 {
-        let mut result = 0u32;
+    pub fn parse_modifiers(mods: &[String]) -> HOT_KEY_MODIFIERS {
+        let mut result: HOT_KEY_MODIFIERS = 0;
         for m in mods {
             match m.to_uppercase().as_str() {
-                "ALT" | "MENU" => result |= MOD_ALT as u32,
-                "CTRL" | "CONTROL" => result |= MOD_CONTROL as u32,
-                "SHIFT" => result |= MOD_SHIFT as u32,
-                "WIN" | "META" => result |= MOD_WIN as u32,
+                "ALT" | "MENU" => result |= MOD_ALT,
+                "CTRL" | "CONTROL" => result |= MOD_CONTROL,
+                "SHIFT" => result |= MOD_SHIFT,
+                "WIN" | "META" => result |= MOD_WIN,
                 _ => {}
             }
         }
@@ -28,98 +27,166 @@ mod win {
 
     pub fn parse_vkey(key: &str) -> Option<u32> {
         match key.to_uppercase().as_str() {
-            "F1" => Some(VK_F1 as u32),
-            "F2" => Some(VK_F2 as u32),
-            "F3" => Some(VK_F3 as u32),
-            "F4" => Some(VK_F4 as u32),
-            "F5" => Some(VK_F5 as u32),
-            "F6" => Some(VK_F6 as u32),
-            "F7" => Some(VK_F7 as u32),
-            "F8" => Some(VK_F8 as u32),
-            "F9" => Some(VK_F9 as u32),
-            "F10" => Some(VK_F10 as u32),
-            "F11" => Some(VK_F11 as u32),
-            "F12" => Some(VK_F12 as u32),
-            "A" => Some(VK_A as u32),
-            "B" => Some(VK_B as u32),
-            "C" => Some(VK_C as u32),
-            "D" => Some(VK_D as u32),
-            "E" => Some(VK_E as u32),
-            "F" => Some(VK_F as u32),
-            "G" => Some(VK_G as u32),
-            "H" => Some(VK_H as u32),
-            "I" => Some(VK_I as u32),
-            "J" => Some(VK_J as u32),
-            "K" => Some(VK_K as u32),
-            "L" => Some(VK_L as u32),
-            "M" => Some(VK_M as u32),
-            "N" => Some(VK_N as u32),
-            "O" => Some(VK_O as u32),
-            "P" => Some(VK_P as u32),
-            "Q" => Some(VK_Q as u32),
-            "R" => Some(VK_R as u32),
-            "S" => Some(VK_S as u32),
-            "T" => Some(VK_T as u32),
-            "U" => Some(VK_U as u32),
-            "V" => Some(VK_V as u32),
-            "W" => Some(VK_W as u32),
-            "X" => Some(VK_X as u32),
-            "Y" => Some(VK_Y as u32),
-            "Z" => Some(VK_Z as u32),
-            "0" => Some(VK_0 as u32),
-            "1" => Some(VK_1 as u32),
-            "2" => Some(VK_2 as u32),
-            "3" => Some(VK_3 as u32),
-            "4" => Some(VK_4 as u32),
-            "5" => Some(VK_5 as u32),
-            "6" => Some(VK_6 as u32),
-            "7" => Some(VK_7 as u32),
-            "8" => Some(VK_8 as u32),
-            "9" => Some(VK_9 as u32),
-            "SPACE" => Some(VK_SPACE as u32),
-            "ENTER" | "RETURN" => Some(VK_RETURN as u32),
-            "TAB" => Some(VK_TAB as u32),
-            "ESC" | "ESCAPE" => Some(VK_ESCAPE as u32),
-            "DELETE" | "DEL" => Some(VK_DELETE as u32),
-            "INSERT" | "INS" => Some(VK_INSERT as u32),
-            "HOME" => Some(VK_HOME as u32),
-            "END" => Some(VK_END as u32),
-            "PAGEUP" | "PGUP" => Some(VK_PRIOR as u32),
-            "PAGEDOWN" | "PGDN" => Some(VK_NEXT as u32),
-            "UP" => Some(VK_UP as u32),
-            "DOWN" => Some(VK_DOWN as u32),
-            "LEFT" => Some(VK_LEFT as u32),
-            "RIGHT" => Some(VK_RIGHT as u32),
+            "F1" => Some(0x7A),
+            "F2" => Some(0x7B),
+            "F3" => Some(0x7C),
+            "F4" => Some(0x7D),
+            "F5" => Some(0x7E),
+            "F6" => Some(0x7F),
+            "F7" => Some(0x80),
+            "F8" => Some(0x81),
+            "F9" => Some(0x82),
+            "F10" => Some(0x83),
+            "F11" => Some(0x84),
+            "F12" => Some(0x85),
+            "A" => Some(0x41),
+            "B" => Some(0x42),
+            "C" => Some(0x43),
+            "D" => Some(0x44),
+            "E" => Some(0x45),
+            "F" => Some(0x46),
+            "G" => Some(0x47),
+            "H" => Some(0x48),
+            "I" => Some(0x49),
+            "J" => Some(0x4A),
+            "K" => Some(0x4B),
+            "L" => Some(0x4C),
+            "M" => Some(0x4D),
+            "N" => Some(0x4E),
+            "O" => Some(0x4F),
+            "P" => Some(0x50),
+            "Q" => Some(0x51),
+            "R" => Some(0x52),
+            "S" => Some(0x53),
+            "T" => Some(0x54),
+            "U" => Some(0x55),
+            "V" => Some(0x56),
+            "W" => Some(0x57),
+            "X" => Some(0x58),
+            "Y" => Some(0x59),
+            "Z" => Some(0x5A),
+            "0" => Some(0x30),
+            "1" => Some(0x31),
+            "2" => Some(0x32),
+            "3" => Some(0x33),
+            "4" => Some(0x34),
+            "5" => Some(0x35),
+            "6" => Some(0x36),
+            "7" => Some(0x37),
+            "8" => Some(0x38),
+            "9" => Some(0x39),
+            "SPACE" => Some(0x20),
+            "ENTER" | "RETURN" => Some(0x0D),
+            "TAB" => Some(0x09),
+            "ESC" | "ESCAPE" => Some(0x1B),
+            "DELETE" | "DEL" => Some(0x2E),
+            "INSERT" | "INS" => Some(0x2D),
+            "HOME" => Some(0x24),
+            "END" => Some(0x23),
+            "PAGEUP" | "PGUP" => Some(0x21),
+            "PAGEDOWN" | "PGDN" => Some(0x22),
+            "UP" => Some(0x26),
+            "DOWN" => Some(0x28),
+            "LEFT" => Some(0x25),
+            "RIGHT" => Some(0x27),
             _ => None,
         }
     }
 
-    pub unsafe fn hidden_window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, _lparam: LPARAM) -> LRESULT {
+    unsafe extern "system" fn hidden_window_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> LRESULT {
         if msg == WM_HOTKEY {
             let id = wparam as u32;
-            if let Some(tx) = HOTKEY_SENDER.lock().unwrap().as_ref() {
-                let _ = tx.send(id);
+            if let Ok(guard) = HOTKEY_SENDER.lock() {
+                if let Some(ref tx) = *guard {
+                    let _ = tx.send(id);
+                }
             }
             return 0;
         }
-        if msg == WM_QUIT {
-            return 0;
-        }
-        DefWindowProcW(hwnd, msg, wparam, _lparam)
+        DefWindowProcW(hwnd, msg, wparam, lparam)
     }
-
-    use std::sync::Mutex;
 
     static HOTKEY_SENDER: Mutex<Option<mpsc::Sender<u32>>> = Mutex::new(None);
 
     pub fn set_hotkey_sender(tx: mpsc::Sender<u32>) {
         *HOTKEY_SENDER.lock().unwrap() = Some(tx);
     }
+
+    pub fn register_hotkey(id: i32, modifiers: HOT_KEY_MODIFIERS, vk: u32) -> Result<(), String> {
+        unsafe {
+            let ok = RegisterHotKey(std::ptr::null_mut(), id, modifiers, vk);
+            if ok == 0 {
+                return Err(format!(
+                    "RegisterHotKey fehlgeschlagen (mods={modifiers}, key={vk})"
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn unregister_hotkey(id: i32) {
+        unsafe {
+            UnregisterHotKey(std::ptr::null_mut(), id);
+        }
+    }
+
+    pub fn run_message_loop() {
+        unsafe {
+            let class_name: Vec<u16> = "NexusHotkeyMsg\0".encode_utf16().collect();
+            let wnd_class = WNDCLASSEXW {
+                cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
+                style: 0,
+                lpfnWndProc: Some(hidden_window_proc),
+                cbClsExtra: 0,
+                cbWndExtra: 0,
+                hInstance: GetModuleHandleW(std::ptr::null()),
+                hIcon: std::ptr::null_mut(),
+                hCursor: std::ptr::null_mut(),
+                hbrBackground: std::ptr::null_mut(),
+                lpszMenuName: std::ptr::null(),
+                lpszClassName: class_name.as_ptr(),
+                hIconSm: std::ptr::null_mut(),
+            };
+
+            RegisterClassExW(&wnd_class);
+
+            let hwnd = CreateWindowExW(
+                0,
+                class_name.as_ptr(),
+                std::ptr::null(),
+                0,
+                0,
+                0,
+                0,
+                0,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                GetModuleHandleW(std::ptr::null()),
+                std::ptr::null(),
+            );
+
+            if hwnd.is_null() {
+                eprintln!("[s-b] Fehler: Konnte Hotkey-Window nicht erstellen");
+                return;
+            }
+
+            let mut msg: MSG = std::mem::zeroed();
+            while GetMessageW(&mut msg, hwnd, 0, 0) != 0 {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+    }
 }
 
 pub struct HotkeyManager {
-    registered: HashMap<String, u32>,
-    next_id: u32,
+    registered: HashMap<String, i32>,
+    next_id: i32,
 }
 
 impl HotkeyManager {
@@ -130,114 +197,69 @@ impl HotkeyManager {
         }
     }
 
-    #[cfg(windows)]
-    pub fn register(&mut self, cmd: &HotkeyRegisterCmd) -> Result<(), String> {
-        use windows_sys::Win32::UI::WindowsAndMessaging::*;
+    pub fn register(&mut self, cmd: &crate::bus::HotkeyRegisterCmd) -> Result<(), String> {
+        #[cfg(windows)]
+        {
+            let modifiers = win::parse_modifiers(&cmd.modifiers);
+            let vk = win::parse_vkey(&cmd.key)
+                .ok_or_else(|| format!("Unbekannte Taste: {}", cmd.key))?;
 
-        let modifiers = win::parse_modifiers(&cmd.modifiers);
-        let vk = win::parse_vkey(&cmd.key)
-            .ok_or_else(|| format!("Unbekannte Taste: {}", cmd.key))?;
+            let hotkey_id = self.next_id;
+            self.next_id += 1;
 
-        let hotkey_id = self.next_id;
-        self.next_id += 1;
-
-        unsafe {
-            let ok = RegisterHotKey(std::ptr::null_mut(), hotkey_id as i32, modifiers, vk);
-            if ok == 0 {
-                return Err(format!(
-                    "RegisterHotKey fehlgeschlagen für {} (mods={}, key={})",
-                    cmd.hotkey_id, modifiers, vk
-                ));
-            }
+            win::register_hotkey(hotkey_id, modifiers, vk)?;
+            self.registered.insert(cmd.hotkey_id.clone(), hotkey_id);
+            println!(
+                "[s-b] Hotkey registriert: {} -> ID {}",
+                cmd.hotkey_id, hotkey_id
+            );
+            Ok(())
         }
 
-        self.registered.insert(cmd.hotkey_id.clone(), hotkey_id);
-        println!("[s-b] Hotkey registriert: {} -> ID {}", cmd.hotkey_id, hotkey_id);
-        Ok(())
+        #[cfg(not(windows))]
+        {
+            let hotkey_id = self.next_id;
+            self.next_id += 1;
+            self.registered
+                .insert(cmd.hotkey_id.clone(), hotkey_id);
+            println!(
+                "[s-b] Hotkey registriert (Stub): {} -> ID {}",
+                cmd.hotkey_id, hotkey_id
+            );
+            Ok(())
+        }
     }
 
-    #[cfg(not(windows))]
-    pub fn register(&mut self, cmd: &HotkeyRegisterCmd) -> Result<(), String> {
-        let hotkey_id = self.next_id;
-        self.next_id += 1;
-        self.registered.insert(cmd.hotkey_id.clone(), hotkey_id);
-        println!("[s-b] Hotkey registriert (Stub): {} -> ID {}", cmd.hotkey_id, hotkey_id);
-        Ok(())
-    }
-
-    #[cfg(windows)]
     pub fn unregister_all(&self) {
-        use windows_sys::Win32::UI::WindowsAndMessaging::*;
-        for (_, id) in &self.registered {
-            unsafe {
-                UnregisterHotKey(std::ptr::null_mut(), *id as i32);
+        #[cfg(windows)]
+        {
+            for (_, id) in &self.registered {
+                win::unregister_hotkey(*id);
             }
         }
     }
-
-    #[cfg(not(windows))]
-    pub fn unregister_all(&self) {}
 
     pub fn find_by_id(&self, win_id: u32) -> Option<&String> {
-        self.registered.iter().find(|(_, v)| **v == win_id).map(|(k, _)| k)
+        self.registered
+            .iter()
+            .find(|(_, v)| **v as u32 == win_id)
+            .map(|(k, _)| k)
     }
 }
 
-#[cfg(windows)]
-pub fn spawn_message_loop(tx: mpsc::Sender<u32>) -> std::thread::JoinHandle<()> {
+pub fn spawn_message_loop(tx: std::sync::mpsc::Sender<u32>) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
-        unsafe {
+        #[cfg(windows)]
+        {
             win::set_hotkey_sender(tx);
-
-            let class_name: Vec<u16> = "NexusHotkeyMsg\0".encode_utf16().collect();
-            let wnd_class = WNDCLASSEXW {
-                cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
-                style: 0,
-                lpfnWndProc: Some(win::hidden_window_proc),
-                cbClsExtra: 0,
-                cbWndExtra: 0,
-                hInstance: windows_sys::Win32::System::LibraryLoader::GetModuleHandleW(std::ptr::null()),
-                hIcon: 0,
-                hCursor: 0,
-                hbrBackground: 0,
-                lpszMenuName: std::ptr::null(),
-                lpszClassName: class_name.as_ptr(),
-                hIconSm: 0,
-            };
-
-            RegisterClassExW(&wnd_class);
-
-            let hwnd = CreateWindowExW(
-                0,
-                class_name.as_ptr(),
-                std::ptr::null(),
-                0,
-                0, 0, 0, 0,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                windows_sys::Win32::System::LibraryLoader::GetModuleHandleW(std::ptr::null()),
-                std::ptr::null(),
-            );
-
-            if hwnd.is_null() {
-                eprintln!("[s-b] Fehler: Konnte Message-Window nicht erstellen");
-                return;
-            }
-
-            let mut msg: MSG = std::mem::zeroed();
-            while GetMessageW(&mut msg, hwnd, 0, 0) > 0 {
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
-            }
+            win::run_message_loop();
         }
-    })
-}
-
-#[cfg(not(windows))]
-pub fn spawn_message_loop(_tx: mpsc::Sender<u32>) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(std::time::Duration::from_secs(3600));
+        #[cfg(not(windows))]
+        {
+            let _ = tx;
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(3600));
+            }
         }
     })
 }
