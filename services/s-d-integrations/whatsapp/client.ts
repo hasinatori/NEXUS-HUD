@@ -1,9 +1,15 @@
-// Zuletzt geaendert: 2026-08-17
+// Zuletzt geaendert: 2026-08-28
 // Duenner Client fuer die WhatsApp-Integration (offizielle Webhook-API).
 // fetchImpl ist fuer Tests injizierbar.
 
 import type { WhatsAppMessage } from "./message.ts";
 import { toWhatsAppMessage } from "./message.ts";
+
+/** Struktur des WhatsApp-Webhook-Values. */
+interface WhatsAppWebhookValue {
+  messages?: Array<Record<string, unknown>>;
+  contacts?: Array<{ profile?: { name?: string }; wa_id?: string }>;
+}
 
 export type FetchLike = typeof fetch;
 
@@ -39,9 +45,9 @@ export class WhatsAppClient {
 
   /** Verarbeitet einen eingehenden Webhook-Payload. */
   parseWebhook(payload: Record<string, unknown>): WhatsAppMessage | null {
-    const entry = (payload.entry as Array<{ changes?: Array<{ value?: Record<string, unknown> }> }>)?.[0];
+    const entry = (payload.entry as Array<{ changes?: Array<{ value?: WhatsAppWebhookValue }> }>)?.[0];
     const change = entry?.changes?.[0]?.value;
-    const rawMsg = change?.messages?.[0] as Record<string, unknown> | undefined;
+    const rawMsg = change?.messages?.[0];
     if (!rawMsg) {
       return null;
     }

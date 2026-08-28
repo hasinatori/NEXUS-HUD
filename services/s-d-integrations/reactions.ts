@@ -1,10 +1,10 @@
-// Zuletzt geaendert: 2026-08-17
+// Zuletzt geaendert: 2026-08-28
 // Cross-Module Event-Reactions: Reagiert auf IPC-Events anderer Services
 // und fuehrt Media-/Presence-Aktionen aus (z.B. Build-Fehler -> Discord-Status).
 
-import type { SpotifySession } from "../spotify/session.ts";
-import type { DiscordSession } from "../discord/session.ts";
-import type { CallState } from "../voip/call.ts";
+import type { SpotifySession } from "./spotify/session.ts";
+import type { DiscordSession } from "./discord/session.ts";
+import type { CallState } from "./voip/call.ts";
 
 export interface ReactionContext {
   spotify: SpotifySession | null;
@@ -46,11 +46,7 @@ async function onBuildFailed(
       const userId = process.env.DISCORD_USER_ID ?? "";
       const guildId = process.env.DISCORD_GUILD_ID ?? "";
       if (userId && guildId) {
-        const client = (ctx.discord as { client?: unknown }).client;
-        if (client && typeof (client as { setActivity?: unknown }).setActivity === "function") {
-          await (client as { setActivity: (type: number, name: string, details?: string) => Promise<void> })
-            .setActivity(ACTIVITY_PLAYING, `Build-Fehler: ${project}`, `Letzter Build fehlgeschlagen`);
-        }
+        await ctx.discord.setActivity(ACTIVITY_PLAYING, `Build-Fehler: ${project}`, `Letzter Build fehlgeschlagen`);
       }
     } catch (err) {
       console.error(`[S-D] Discord-Status-Update fehlgeschlagen: ${(err as Error).message}`);
@@ -70,11 +66,7 @@ async function onBuildSucceeded(
       const userId = process.env.DISCORD_USER_ID ?? "";
       const guildId = process.env.DISCORD_GUILD_ID ?? "";
       if (userId && guildId) {
-        const client = (ctx.discord as { client?: unknown }).client;
-        if (client && typeof (client as { setActivity?: unknown }).setActivity === "function") {
-          await (client as { setActivity: (type: number, name: string, details?: string) => Promise<void> })
-            .setActivity(ACTIVITY_PLAYING, `Build OK: ${project}`, `Letzter Build erfolgreich`);
-        }
+        await ctx.discord.setActivity(ACTIVITY_PLAYING, `Build OK: ${project}`, `Letzter Build erfolgreich`);
       }
     } catch (err) {
       console.error(`[S-D] Discord-Status-Update fehlgeschlagen: ${(err as Error).message}`);
@@ -98,11 +90,7 @@ async function onProfileSwitched(
           : profile === "afk" ? "AFK"
           : "Coding";
         const activityType = profile === "gaming" ? ACTIVITY_PLAYING : ACTIVITY_LISTENING;
-        const client = (ctx.discord as { client?: unknown }).client;
-        if (client && typeof (client as { setActivity?: unknown }).setActivity === "function") {
-          await (client as { setActivity: (type: number, name: string, details?: string) => Promise<void> })
-            .setActivity(activityType, `NEXUS HUD — ${statusText}`, `Profil: ${profile}`);
-        }
+        await ctx.discord.setActivity(activityType, `NEXUS HUD — ${statusText}`, `Profil: ${profile}`);
       }
     } catch (err) {
       console.error(`[S-D] Discord-Status-Update fehlgeschlagen: ${(err as Error).message}`);
