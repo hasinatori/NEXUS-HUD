@@ -1,6 +1,6 @@
 package main
 
-// Zuletzt geändert: 2026-08-14
+// Zuletzt geaendert: 2026-08-17
 
 import (
 	"os"
@@ -75,5 +75,86 @@ func TestRunnerTaskMapping(t *testing.T) {
 	task := cfg.runnerTask("a", cfg.Tasks["a"])
 	if task.Name != "a" || len(task.Command) != 1 || task.TimeoutMS != 100 {
 		t.Fatalf("task=%+v", task)
+	}
+}
+
+func TestLoadConfigWithCondition(t *testing.T) {
+	content := `{
+  "tasks": {
+    "alert": {"command": ["sh", "-c", "echo alert"]}
+  },
+  "watchers": [
+    {
+      "path": "/tmp/inbox",
+      "triggers": ["created"],
+      "then": "alert",
+      "if": {"profile": "dev", "event_field": "build.ok", "event_value": "false"}
+    }
+  ]
+}`
+	cfg, err := loadConfig(writeConfig(t, content))
+	if err != nil {
+		t.Fatalf("loadConfig: %v", err)
+	}
+	w := cfg.Watchers[0]
+	if w.If == nil {
+		t.Fatal("If-Bedingung sollte gesetzt sein")
+	}
+	if w.If.Profile != "dev" {
+		t.Fatalf("Profile=%q, want dev", w.If.Profile)
+	}
+	if w.If.EventField != "build.ok" {
+		t.Fatalf("EventField=%q, want build.ok", w.If.EventField)
+	}
+	if w.If.EventValue != "false" {
+		t.Fatalf("EventValue=%q, want false", w.If.EventValue)
+	}
+}
+
+func TestLoadConfigWithConditionOptional(t *testing.T) {
+	cfg, err := loadConfig(writeConfig(t, goodConfig))
+	if err != nil {
+		t.Fatalf("loadConfig: %v", err)
+	}
+	for _, w := range cfg.Watchers {
+		if w.If != nil {
+			t.Fatal("If sollte nil sein wenn nicht angegeben")
+		}
+	}
+}
+
+func TestStateStoreProfileSwitch(t *testing.T) {
+	state := &StateStore{Profile: "dev", EventState: map[string]string{}}
+	state.SetProfile("gaming")
+	if state.Profile != "gaming" {
+		t.Fatalf("Profile=%q, want gaming", state.Profile)
+	}
+}
+
+func TestStateStoreEventField(t *testing.T) {
+	state := &StateStore{Profile: "dev", EventState: map[string]string{}}
+	state.SetEventField("build.ok", "false")
+	if state.EventState["build.ok"] != "false" {
+		t.Fatal("EventField nicht gesetzt")
+	}
+}
+
+func TestStateStoreRecordRun(t *testing.T) {
+	state := &StateStore{Profile: "dev", EventState: map[string]string{}}
+	state.RecordRun("task1")
+	state.RecordRun("task2")
+	if len(state.RunHistory) != 2 {
+		t.Fatalf("RunHistory laenge=%d, want 2", len(state.RunHistory))
+	}
+}
+
+func TestStateStoreEvalContext(t *testing.T) {
+	state := &StateStore{Profile: "dev", EventState: map[string]string{"x": "y"}}
+	ctx := state.EvalContext()
+	if ctx.Profile != "dev" {
+		t.Fatalf("Profile=%q", ctx.Profile)
+	}
+	if ctx.EventState["x"] != "y" {
+		t.Fatal("EventState nicht uebergeben")
 	}
 }

@@ -55,6 +55,15 @@ async fn handle_message(
                 window::focus_window(hwnd);
             }
         }
+        "cmd.profile.switch" => {
+            let profile = v
+                .get("params")
+                .and_then(|p| p.get("profile"))
+                .and_then(|t| t.as_str())
+                .unwrap_or("");
+            println!("[s-b] Profil gewechselt: {} (alle Hotkeys zurueckgesetzt)", profile);
+            hotkey_mgr.clear_all();
+        }
         "cmd.clipboard.set" => {
             let text = v
                 .get("params")

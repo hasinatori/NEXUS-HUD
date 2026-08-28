@@ -1,6 +1,6 @@
 {
   "name": "s-d-integrations",
-  "version": "0.2.0-s-d.1",
+  "version": "0.3.0-s-d.2",
   "private": true,
   "type": "module",
   "description": "S-D — Integrated Apps (Spotify, Discord, WhatsApp): Phase-1-Stub.",
@@ -8,7 +8,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
-    "test": "npm run build && node --test ../../tests/s-d-integrations/spotify.test.mjs"
+    "test": "npm run build && node --test ../../tests/s-d-integrations/*.test.mjs"
   },
   "dependencies": {
     "ws": "^8.21.3"

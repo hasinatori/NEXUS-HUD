@@ -176,3 +176,6 @@ jobs:
       - name: Rust build
         working-directory: services/s-b-macro-launchpad
         run: cargo build --locked
+      - name: Rust test
+        working-directory: services/s-b-macro-launchpad
+        run: cargo test

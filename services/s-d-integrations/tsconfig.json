@@ -12,5 +12,5 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["index.ts", "spotify/**/*.ts"]
+  "include": ["index.ts", "spotify/**/*.ts", "discord/**/*.ts", "whatsapp/**/*.ts", "voip/**/*.ts"]
 }

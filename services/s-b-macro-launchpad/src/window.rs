@@ -145,3 +145,45 @@ pub fn get_window_title(hwnd: usize) -> String {
         String::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_window_returns_none_on_non_windows() {
+        assert_eq!(find_window("Nonexistent"), None);
+    }
+
+    #[test]
+    fn test_get_window_rect_returns_none_on_non_windows() {
+        assert_eq!(get_window_rect(0), None);
+    }
+
+    #[test]
+    fn test_set_window_pos_returns_false_on_non_windows() {
+        assert_eq!(set_window_pos(0, 100, 200, 800, 600), false);
+    }
+
+    #[test]
+    fn test_focus_window_does_not_panic() {
+        focus_window(0);
+    }
+
+    #[test]
+    fn test_get_foreground_window_returns_zero_on_non_windows() {
+        assert_eq!(get_foreground_window(), 0);
+    }
+
+    #[test]
+    fn test_get_window_title_returns_empty_on_non_windows() {
+        assert_eq!(get_window_title(0), String::new());
+    }
+
+    #[test]
+    fn test_set_window_pos_with_various_values() {
+        assert_eq!(set_window_pos(0, 0, 0, 1, 1), false);
+        assert_eq!(set_window_pos(0, -100, -200, 1920, 1080), false);
+        assert_eq!(set_window_pos(42, 50, 50, 400, 300), false);
+    }
+}

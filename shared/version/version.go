@@ -4,9 +4,9 @@
 package version
 
 const (
-	Project = "0.2.0"
+	Project = "0.3.0"
 
-	Bus          = "0.2.0-bus.1"
-	SCAutomation = "0.2.0-s-c.1"
-	SEMonitor    = "0.2.0-s-e.1"
+	Bus          = "0.3.0-bus.1"
+	SCAutomation = "0.3.0-s-c.2"
+	SEMonitor    = "0.3.0-s-e.1"
 )

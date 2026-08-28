@@ -280,3 +280,64 @@ impl ClipboardWatcher {
         win::set_clipboard_text(text)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_clipboard_manager_new_is_empty() {
+        let mgr = win::ClipboardManager::new();
+        assert!(!mgr.has_changed(""));
+        assert!(mgr.has_changed("something"));
+    }
+
+    #[test]
+    fn test_clipboard_manager_has_changed_initial() {
+        let mgr = win::ClipboardManager::new();
+        assert!(mgr.has_changed("anything"));
+    }
+
+    #[test]
+    fn test_clipboard_manager_has_changed_after_set() {
+        let mut mgr = win::ClipboardManager::new();
+        mgr.set_last_content("hello".into());
+        assert!(!mgr.has_changed("hello"));
+        assert!(mgr.has_changed("world"));
+    }
+
+    #[test]
+    fn test_clipboard_manager_has_changed_empty_string() {
+        let mut mgr = win::ClipboardManager::new();
+        mgr.set_last_content(String::new());
+        assert!(!mgr.has_changed(""));
+        assert!(mgr.has_changed("not empty"));
+    }
+
+    #[test]
+    fn test_clipboard_manager_record_change_does_not_panic() {
+        let mut mgr = win::ClipboardManager::new();
+        mgr.record_change("text", "preview", Some(100));
+    }
+
+    #[test]
+    fn test_clipboard_watcher_new() {
+        let watcher = ClipboardWatcher::new();
+        let mgr = watcher.manager.lock().unwrap();
+        assert!(mgr.has_changed("anything"));
+    }
+
+    #[test]
+    fn test_clipboard_watcher_set_text_ok() {
+        let watcher = ClipboardWatcher::new();
+        assert!(watcher.set_text("test").is_ok());
+    }
+
+    #[test]
+    fn test_clipboard_manager_event_sender_no_op() {
+        let mut mgr = win::ClipboardManager::new();
+        let (tx, _rx) = std::sync::mpsc::channel();
+        mgr.set_event_sender(tx);
+        mgr.send_event("test".into());
+    }
+}

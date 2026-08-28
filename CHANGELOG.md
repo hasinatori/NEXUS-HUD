@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- Zweck: Übersicht aller nennenswerten Änderungen, Format nach Keep a Changelog. -->
-<!-- Zuletzt geändert: 2026-08-16 -->
+<!-- Zuletzt geändert: 2026-08-17 -->
 
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
@@ -11,7 +11,15 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- S-A UI-Shell: Frameless Overlay-Mode mit transparentem Hintergrund, Always-on-Top (`WS_EX_TOOLWINDOW`), Mica/Acrylic Backdrop, Drag-Support via Header-Region; Widget-Grid dynamisch aus `layout.json` erzeugt (4x4 Grid mit Gauge/Git/Media/Build-Widgets), Event-Dispatching von `event.system.metrics`/`event.git.status`/`event.build.*`/`event.media.state` an die passenden Widgets; Control-Bar mit cmd.*-Sending-Buttons: Media-Play/Pause (`cmd.media.toggle`), Media-Next (`cmd.media.next`), App-Launch (`cmd.app.launch` mit Dialog), Automation-Run (`cmd.automation.run` mit Dialog), Reconnect-Button; Protocol.cs erweitert um CmdMediaToggle/CmdMediaNext/CmdMediaVolume/CmdAppLaunch/CmdHotkeyRegister/CmdWindowMove/CmdAutomationRun/CmdClipboardSet.
+- S-C Profile-System: `profiles.json` mit Context-Profilen (dev/gaming/afk), Hotkey-Bindings, Watcher-Overrides, Media-Einstellungen pro Profil; `ProfileManager` fuer Profil-Switching mit Validierung.
+- S-C Event-Regeln: `event_rules.json` fuer Cross-Module-Automatisierung; `EventRule` mit Wildcard-Matching (`event.build.*`), IF-Bedingungen und cmd-Aktionen (z.B. `event.build.failed` -> `cmd.media.toggle` -> S-D).
+- S-D Event-Reactions: `reactions.ts` reagiert auf `event.build.failed`, `event.build.succeeded`, `event.profile.switched` und passt Discord-Activity und Spotify-Lautstaerke an.
+- S-B Profil-Switching: `cmd.profile.switch` zurueckt alle Hotkeys via `clear_all()` fuer Neuregistrierung.
+- IPC-Events: `event.automation.rule.triggered` (Regel-Trigger), `cmd.media.set_activity` (Discord-Activity setzen).
+- Schema: 38 Methoden (2 neue), `events.schema.gen.go` regeneriert; Schema-Validierung: 28 valid + 15 invalid Payloads.
+- S-C Tests: +17 neue Tests (profiles_test.go: 8, eventrules_test.go: 6, reactions.test.mjs: 4).
+- S-B Tests: +1 Test (clear_all).
+- S-D Tests: reactions.test.mjs mit Mock-Context fuer Event-Reactions.
 - S-B Macro Launchpad: Win32-API-Integration mit `windows-sys` — Global Hotkey Listener (`RegisterHotKey`/`UnregisterHotKey` mit Message-Loop), Process Launcher (`CreateProcessW` mit Fokussierung via `EnumWindows`), Window Manager (`SetWindowPos` für Titel-basierte Fenstersuche), Clipboard Manager (`AddClipboardFormatListener` für Monitor, `SetClipboardData`/`GetClipboardData`, History mit max. 50 Einträgen); empfängt `cmd.hotkey.register`/`cmd.app.launch`/`cmd.window.move`/`cmd.clipboard.set`, sendet `event.hotkey.triggered`/`event.process.started`/`event.window.moved`/`event.clipboard.changed` an den Bus.
 - S-D Spotify-Service: OAuth2-Refresh-Flow (`spotify/auth.ts`), API-Client (`spotify/client.ts`, injizierbares `fetch`), `toMediaState`-Mapping und `SpotifySession` mit Auto-Refresh + 401-Retry; `index.ts` sendet `event.media.state` (Poll, nur bei Änderung) und verarbeitet `cmd.media.toggle`/`next`/`volume`; aktivierbar über `SPOTIFY_CLIENT_ID`/`SECRET`/`REFRESH_TOKEN`, sonst bleibt S-D Hello-Stub. Base-URLs per `SPOTIFY_API_BASE`/`SPOTIFY_TOKEN_URL` überschreibbar.
 - Schema: `event.media.state` (playing/track/artist/album/album_art_url/duration_ms/progress_ms) und `cmd.media.volume` (`volume` 0–100) mit `params`-Pflichtfeldern; `events.schema.gen.go` regeneriert; Schema-Tests erweitert.
@@ -53,10 +61,10 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - README.md übernimmt die Rolle der Hauptdokumentation (README.txt entfernt).
-- README.md: Status auf Phase 1 aktualisiert, Abschnitt „Getting Started" mit konkreten Startbefehlen für den Dev-Bus und alle Services.
-- ARCHITECTURE.md 3.3: Bus-Hello und periodisches Hello der Stubs dokumentiert.
-- ARCHITECTURE.md/CONTRIBUTING.md: Status und CI-Pflichten an Phase 1 und das Release-Setup angepasst.
-- README.md/ARCHITECTURE.md: Zeitraumangaben (Wochen) aus der Roadmap entfernt; Änderungsdatum wird künftig als Kommentar im Dateikopf geführt (Konvention, siehe CONTRIBUTING.md).
+- README.md: Roadmap-Status auf Phase 2/3 aktualisiert, S-C Abschnitt mit IF-Bedingungen, S-D Abschnitt mit Discord/WhatsApp/VoIP.
+- CONTRIBUTING.md: Aktueller Stand auf Phase 2/3 aktualisiert, CI-Pflichten mit Rust/S-D/Go/Schema-Test-Erfordernissen erweitert.
+- ARCHITECTURE.md 3.3: Event-Katalog um 7 neue Events erweitert (29→36 Methoden), S-C/S-D Abschnitte aktualisiert.
+- ARCHITECTURE.md/CONTRIBUTING.md: Zeitraumangaben (Wochen) aus der Roadmap entfernt; Änderungsdatum wird künftig als Kommentar im Dateikopf geführt (Konvention, siehe CONTRIBUTING.md).
 - S-A: Stack-Entscheidung fixiert — **WinUI 3 (.NET 8)** (Build/Test nur auf Windows, Crostini nur Vorbereitung); Tauri-Option entfernt; RAM-Ziel (<150 MB) als weicher Richtwert umformuliert (README.md, ARCHITECTURE.md, docs/dev-env.md).
 
 ### Planned (Roadmap)

@@ -76,19 +76,20 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Hauptaufgaben:**
   * [x] **File-Watcher System:** Überwachung von Ordnern (z.B. Downloads, Screenshots) auf Datei-Änderungen.
   * [x] **Task-Runner Engine:** Ausführen lokaler Aktionen (z.B. Dateien konvertieren, Skripte triggern, Aufräum-Pipelines).
-  * [ ] **Node/Workflow Engine Parser:** IF-THIS-THEN-THAT-Regeln — v1 als JSON (Trigger → Task) umgesetzt, Bedingungen (`IF`) folgen.
+  * [x] **Node/Workflow Engine Parser:** IF-THIS-THEN-THAT-Regeln — v1 als JSON (Trigger → Task) umgesetzt, Bedingungen (`IF profile`, `IF event_field`, `IF max_runs`) implementiert.
 * **Deliverable:** Ein autonomer Hintergrund-Dienst, der Custom-Automationen ausführt.
 
 ---
 
-### S-D: Integrated Apps (Spotify, Discord, WhatsApp)
+### S-D: Integrated Apps (Spotify, Discord, WhatsApp, VoIP)
 
 * **Lead:** Developer D
 * **Tech-Stack:** `Node.js / TypeScript`
 * **Hauptaufgaben:**
-  * [~] **Spotify Service:** OAuth2-Refresh-Flow, Play/Pause, next/previous, Lautstärke, Track-Name, Album-Art & Progress via Spotify Web API (aktivierbar über `SPOTIFY_*`-Env; ohne Credentials bleibt S-D Hello-Stub).
-  * [ ] **Discord Rich Presence & Bot Service:** Status-Updates und Abfangen bestimmter Trigger-Words.
-  * [ ] **WhatsApp Webhook / Web-Automation:** Push-Benachrichtigungen bei bestimmten Kontakten/Wörtern auf das HUD weiterleiten.
+  * [x] **Spotify Service:** OAuth2-Refresh-Flow, Play/Pause, next/previous, Lautstärke, Track-Name, Album-Art & Progress via Spotify Web API (aktivierbar über `SPOTIFY_*`-Env; ohne Credentials bleibt S-D Hello-Stub).
+  * [x] **Discord Rich Presence:** Bot-Status-Abfrage, Activity-Setzen via Bot-API (aktivierbar über `DISCORD_*`-Env; ohne Credentials Stub).
+  * [x] **WhatsApp Webhook:** Push-Benachrichtigungen via offizieller API, Webhook-Verarbeitung (aktivierbar über `WHATSAPP_*`-Env; ohne Credentials Stub).
+  * [x] **VoIP-Anrufe:** Twilio-basierte Telefonate — Anruf starten, Status abfragen, auflegen (aktivierbar über `TWILIO_*`-Env; ohne Credentials Stub).
 * **Deliverable:** Ein Unified-API-Module, das Events von Drittanbieter-Services in das NEXUS HUD einspeist.
 
 > **Hinweis:** Spotify-Lautstärke ist über die Web API nicht direkt steuerbar (nur über lokale Spotify-Instanz/Desktop-Client). WhatsApp-Web-Automation und Discord-Bots unterliegen ToS-Risiken. Siehe Risiken in [ARCHITECTURE.md](./ARCHITECTURE.md).
@@ -110,8 +111,9 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 
 ## Roadmap & Meilensteine
 
-> Stand: **Phase 1 läuft** — IPC-Protokoll v1 und Dev-Bus funktionieren, die
-> Service-Stubs senden Hello-Pings an den Bus. Versions-/Release-Prozess:
+> Stand: **Phase 2 abgeschlossen, Phase 3 teilweise umgesetzt** — IPC-Protokoll v1,
+> Dev-Bus, alle Service-Implementierungen, IF-Bedingungen, Profil-Switching,
+> VoIP-Anrufe und S-B-Tests stehen. Versions-/Release-Prozess:
 > siehe `docs/releasing.md`.
 
 ### Phase 1: Core Setup & Inter-Process Communication
@@ -127,14 +129,16 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
   * [x] **S-A:** Dashboard-Grid konfigurierbar (layout.json), Widget-Rendering, Event-Dispatching.
   * [x] **S-B:** App-Launcher, Global Hotkeys, Window Manager, Clipboard Manager funktionieren.
   * [x] **S-C:** Erste File-Watcher-Automatisierung läuft stabil (Trigger → Task, v1).
-  * [ ] **S-D:** Spotify-Steuerung ist voll funktionsfähig.
+  * [x] **S-D:** Spotify-Steuerung voll funktionsfähig + Discord/WhatsApp-Stubs + VoIP-Anrufe (Twilio).
   * [x] **S-E:** System-Stats (CPU/RAM) und Git-Status werden live angezeigt.
 
 ### Phase 3: Integration & Polish
 * **Ziel:** Die Module greifen ineinander (Context-Switching & Triggerevents).
 * **Waypoints:**
-  * [ ] Profil-Switching: Hotkey schaltet UI + Apps + Hintergrund-Tasks gleichzeitig um.
-  * [ ] Cross-Module Automation (z. B. *Build Failed in S-E* -> *Spiele Sound über S-D* -> *Flashe UI in S-A*).
+  * [x] Profil-Switching: `cmd.profile.switch` / `event.profile.switched` im Bus-Protokoll, S-C Profile-System (dev/gaming/afk), S-B Hotkey-Reset bei Profil-Wechsel.
+  * [x] Cross-Module Automation: S-C IF-Bedingungen (Profile, Event-Felder, Rate-Limiting) + Event-Regeln (Wildcard-Matching, z.B. `event.build.failed` -> `cmd.media.toggle` -> S-D).
+  * [x] VoIP-Anrufe: Twilio-Integration in S-D (`cmd.call.make/hangup/status`, `event.call.*`).
+  * [x] S-D Event-Reactions: Reagiert auf `event.build.*` und `event.profile.switched` (Discord-Activity, Spotify-Lautstaerke).
   * [ ] Performance-Optimierung (RAM-Budget der Gesamtanwendung < 150 MB).
 
 ### Phase 4: Testing & Dogfooding
