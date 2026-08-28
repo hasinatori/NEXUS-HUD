@@ -1,6 +1,6 @@
 [package]
 name = "s-b-macro-launchpad"
-version = "0.2.0-s-b.1"
+version = "0.3.0-s-b.2"
 edition = "2021"
 
 [dependencies]
