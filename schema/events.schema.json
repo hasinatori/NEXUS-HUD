@@ -315,6 +315,22 @@
       }
     },
     {
+      "if": { "properties": { "method": { "const": "event.ide.focus" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["filename", "path", "ts"],
+            "properties": {
+              "filename": { "description": "Name der aktiven Datei (Basename).", "type": "string" },
+              "language": { "description": "Sprach-ID des Editors (z.B. go, typescript).", "type": "string" },
+              "path": { "description": "Absoluter Pfad der aktiven Datei.", "type": "string" },
+              "project": { "description": "Name des Workspace/Projekts.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
       "if": { "properties": { "method": { "const": "cmd.media.volume" } } },
       "then": {
         "properties": {

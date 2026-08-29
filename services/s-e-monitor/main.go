@@ -1,7 +1,7 @@
 // Command s-e-monitor ist der Coding & Build Monitor (S-E).
 package main
 
-// Zuletzt geändert: 2026-08-14
+// Zuletzt geändert: 2026-08-28
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/hasinatori/NEXUS-HUD/services/s-e-monitor/buildlog"
 	"github.com/hasinatori/NEXUS-HUD/services/s-e-monitor/gitstatus"
+	"github.com/hasinatori/NEXUS-HUD/services/s-e-monitor/idefocus"
 	"github.com/hasinatori/NEXUS-HUD/services/s-e-monitor/metrics"
 	"github.com/hasinatori/NEXUS-HUD/shared/version"
 	"github.com/hasinatori/NEXUS-HUD/shared/wsclient"
@@ -33,6 +34,7 @@ func main() {
 	gitInterval := flag.Duration("git-interval", 15*time.Second, "Intervall für den Git-Status")
 	buildLog := flag.String("build-log", "", "Zu überwachendes Build-Log (leer = aus)")
 	buildProject := flag.String("build-project", "build", "Projektname für Build-Events")
+	ideFocus := flag.String("ide-focus", "", "IDE-Focus-Datei, die der IDE-Plugin schreibt (leer = aus)")
 	flag.Parse()
 
 	if *showVersion {
@@ -59,6 +61,9 @@ func main() {
 	}
 	if *buildLog != "" {
 		go runBuildLog(ctx, c, *buildLog, *buildProject)
+	}
+	if *ideFocus != "" {
+		go runIdeFocus(ctx, c, *ideFocus)
 	}
 
 	<-ctx.Done()
@@ -135,6 +140,30 @@ func runBuildLog(ctx context.Context, c *wsclient.Client, path, project string) 
 			}
 			if err := c.Notify(ctx, method, params); err != nil && ctx.Err() == nil {
 				log.Printf("[%s] Build-Event senden: %v", serviceID, err)
+			}
+		}
+	}
+}
+
+func runIdeFocus(ctx context.Context, c *wsclient.Client, path string) {
+	w := idefocus.New(path)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			focus, err := w.Poll()
+			if err != nil {
+				log.Printf("[%s] IDE-Fokus: %v", serviceID, err)
+				continue
+			}
+			if focus == nil {
+				continue
+			}
+			if err := c.Notify(ctx, "event.ide.focus", focus.Params()); err != nil && ctx.Err() == nil {
+				log.Printf("[%s] IDE-Fokus senden: %v", serviceID, err)
 			}
 		}
 	}

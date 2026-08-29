@@ -101,10 +101,10 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
 * **Lead:** Developer E
 * **Tech-Stack:** `Go` oder `Python`
 * **Hauptaufgaben:**
-  * [ ] **Local Git Watcher:** Auslesen von aktuellem Branch, Uncommitted Changes & Push-Status im Projektordner.
-  * [ ] **Build-Log Parser:** Überwacht Compiler-Ausgaben / Terminals und schickt bei Errors ("Build Failed") ein Event an die UI.
-  * [ ] **System-Metrics Gatherer:** Auslesen von CPU-Auslastung, RAM-Verbrauch, GPU-Temp via OS APIs.
-  * [ ] Simple IDE-Plugin (z.B. für VS Code) zur Übertragung des aktuellen Focus/Status.
+  * [x] **Local Git Watcher:** Auslesen von aktuellem Branch, Uncommitted Changes & Push-Status im Projektordner.
+  * [x] **Build-Log Parser:** Überwacht Compiler-Ausgaben / Terminals und schickt bei Errors ("Build Failed") ein Event an die UI.
+  * [x] **System-Metrics Gatherer:** Auslesen von CPU-Auslastung, RAM-Verbrauch, GPU-Temp via OS APIs.
+  * [x] Simple IDE-Plugin (z.B. für VS Code) zur Übertragung des aktuellen Focus/Status.
 * **Deliverable:** Ein Developer-Service, der den Arbeits- und Systemzustand in Echtzeit meldet.
 
 ---

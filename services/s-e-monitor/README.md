@@ -2,7 +2,7 @@
 
 <!-- Zweck: Der Entwickler-Monitor: System-Metriken, Git-Status und Build-Ergebnisse
      werden als Events an den Bus gesendet. Keine UI — reine Datenerzeugung. -->
-<!-- Zuletzt geändert: 2026-08-14 -->
+<!-- Zuletzt geändert: 2026-08-28 -->
 
 **Stack:** `Go` (Build/Test auf Linux/Crostini und Windows; Metrik-Leser aktuell Linux via `/proc`)
 
@@ -10,7 +10,7 @@ Hauptaufgaben:
 - [x] System-Metriken (CPU-Auslastung, RAM) als `event.system.metrics`.
 - [x] Git-Status (Branch, staged/uncommitted, ahead/behind) als `event.git.status`.
 - [x] Build-Log-Parser als `event.build.succeeded` / `event.build.failed`.
-- [ ] IDE-Status (`event.ide.focus`) — später.
+- [x] IDE-Status (`event.ide.focus`) via `-ide-focus` + IDE-Bridge (VS Code, siehe `extensions/vscode-nexus`).
 
 ## Verhalten
 
@@ -22,12 +22,15 @@ nach Konfiguration:
 | `event.system.metrics` | CPU + RAM via `/proc` | `-metrics-interval` (Standard 5 s) |
 | `event.git.status` | `git`-CLI im überwachten Repo | `-git-interval` (Standard 15 s) |
 | `event.build.succeeded`/`failed` | Zustandswechsel im Log | Poll 1 s |
+| `event.ide.focus` | Focus-Datei des IDE | Poll 1 s |
 
 Die Metriken brauchen zwei Messpunkte (erster Wert `cpu=0` als Basis). Der Git-Status
 degradiert bei fehlendem Upstream (ahead/behind = 0) und detached HEAD (Branch = kurzer
 Hash). Der Build-Parser meldet nur **Zustandswechsel** (Erfolg↔Fehler), nicht jede Zeile;
 Erkennungs-Muster: `build succeeded/ok/passed`, `success`, `erfolgreich` bzw. `error`,
-`fail(ed|ure)`, `fehler`.
+`fail(ed|ure)`, `fehler`. Der IDE-Fokus kommt aus der Focus-Datei der IDE-Bridge
+(`~/.nexus/ide-focus.json`, siehe `extensions/vscode-nexus`) und wird bei jedem
+Dateiwechsel (Projekt, Datei, Sprache, Pfad) als `event.ide.focus` gemeldet.
 
 ## Build & Run
 
@@ -38,7 +41,8 @@ go run ./services/s-e-monitor \
   -git-dir /pfad/zum/repo \
   -git-interval 15s \
   -build-log /pfad/zum/build.log \
-  -build-project mein-projekt
+  -build-project mein-projekt \
+  -ide-focus ~/.nexus/ide-focus.json
 ```
 
 Flag-Übersicht (alle optional; ohne Flag wird der Bereich nicht gemeldet):
@@ -51,6 +55,7 @@ Flag-Übersicht (alle optional; ohne Flag wird der Bereich nicht gemeldet):
 -git-interval          Intervall für Git-Status (Standard 15s)
 -build-log             Zu überwachendes Build-Log (leer = aus)
 -build-project         Projektname für Build-Events (Standard "build")
+-ide-focus             IDE-Focus-Datei (leer = aus)
 ```
 
 ## Tests
@@ -62,9 +67,11 @@ go test ./services/s-e-monitor/...
 - `metrics`: Parser für `/proc/stat` und `/proc/meminfo`, Delta-Logik (Basiswert).
 - `gitstatus`: Zählt staged/uncommitted/untracked korrekt, detached HEAD (echtes Temp-Repo).
 - `buildlog`: Zustandswechsel-Erkennung, fehlendes File, Zeilen-Klassifizierung.
+- `idefocus`: Parse der Focus-Datei, Zustandswechsel, fehlendes/leeres/kaputtes File,
+  auto-`ts` (kein Timestamp nötig).
 
 Sendet: `event.system.hello`, `event.system.metrics`, `event.git.status`,
-`event.build.succeeded`, `event.build.failed`.
+`event.build.succeeded`, `event.build.failed`, `event.ide.focus`.
 Empfängt: `cmd.metrics.set_interval`, `cmd.git.watch` (geplant, Phase 3).
 
 Deliverable: Ein Entwickler-Service, der den Arbeits- und Systemzustand in Echtzeit meldet.
