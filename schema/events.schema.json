@@ -373,6 +373,32 @@
       }
     },
     {
+      "if": { "properties": { "method": { "const": "cmd.metrics.set_interval" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["interval_ms"],
+            "properties": {
+              "interval_ms": { "description": "Neues Poll-Intervall für Systemmetriken in Millisekunden (0 = aus).", "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "method": { "const": "cmd.git.watch" } } },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["path"],
+            "properties": {
+              "path": { "description": "Pfad des Git-Repos, das zusätzlich überwacht wird.", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
       "if": { "properties": { "method": { "const": "cmd.clipboard.set" } } },
       "then": {
         "properties": {
