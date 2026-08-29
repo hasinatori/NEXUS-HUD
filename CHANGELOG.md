@@ -11,6 +11,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- RAM-Phase 3: `scripts/measure-ram.sh` misst den RSS aller Linux-Module (bus ~11 MB, S-C ~10 MB, S-E ~10 MB, S-D/Node ~59 MB, Summe ~90 MB < 150 MB); Ergebnisse + Einordnung in `docs/ram-budget.md`, ARCHITECTURE.md §8 mit Messwerten aktualisiert, README-Waypoint (RAM-Budget) abgehakt; neuer CI-Job „RAM-Budget (Phase 3)" erzwingt das <150-MB-Ziel.
 - S-E `cmd.git.watch`: optionaler params `interval_ms` für ein eigenes Poll-Intervall je Repo (0/fehlend = Standard `-git-interval`); Schema-Params ergänzt (Regen), Tests erweitert, E2E-Smoke verifiziert.
 - S-E interaktive Commands: `cmd.metrics.set_interval` (params `interval_ms`, 0 = aus) ändert das Metriken-Intervall zur Laufzeit; `cmd.git.watch` (params `path`) registriert zusätzliche Git-Repos mit eigenem Poller (`-git-interval`); Schema-Params für beide ergänzt, `events.schema.gen.go` regeneriert, Schema-Validierung jetzt 31 valid + 18 invalid; 5 neue Unit-Tests (main_test.go), E2E-Smoke verifiziert.
 - S-C Event-Regel-Trigger: `event.automation.rule.triggered` wird jetzt auch tatsächlich gesendet, wenn eine Event-Regel (exakt oder Wildcard) mit erfüllter IF-Bedingung eine Aktion auslöst (rule_name, event_method).

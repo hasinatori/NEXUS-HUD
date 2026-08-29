@@ -139,7 +139,7 @@ Die Kommunikation zwischen UI und den Hintergrund-Diensten erfolgt lokal über *
   * [x] Cross-Module Automation: S-C IF-Bedingungen (Profile, Event-Felder, Rate-Limiting) + Event-Regeln (Wildcard-Matching, z.B. `event.build.failed` -> `cmd.media.toggle` -> S-D).
   * [x] VoIP-Anrufe: Twilio-Integration in S-D (`cmd.call.make/hangup/status`, `event.call.*`).
   * [x] S-D Event-Reactions: Reagiert auf `event.build.*` und `event.profile.switched` (Discord-Activity, Spotify-Lautstaerke).
-  * [ ] Performance-Optimierung (RAM-Budget der Gesamtanwendung < 150 MB).
+  * [x] Performance-Optimierung (RAM-Budget der Gesamtanwendung < 150 MB): Linux-Runtime messbasiert ~90 MB (siehe `docs/ram-budget.md`).
 
 ### Phase 4: Testing & Dogfooding
 * **Ziel:** Das Team nutzt das Tool täglich selbst zum Weiter-Coden.
