@@ -196,3 +196,29 @@ jobs:
       - name: Tests (Fokus-Logik, headless)
         working-directory: extensions/vscode-nexus
         run: npm test
+
+  ram-budget:
+    name: RAM-Budget (Phase 3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.24"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: services/s-d-integrations/package-lock.json
+      - name: S-D bauen
+        working-directory: services/s-d-integrations
+        run: npm ci && npm run build
+      - name: RAM messen und Budget prüfen
+        run: |
+          TOTAL=$(./scripts/measure-ram.sh | awk '/Summe/{print $2}')
+          THRESHOLD=153600
+          echo "Gemessene Summe: ${TOTAL} kB (Limit ${THRESHOLD} kB = 150 MB)"
+          if [ "${TOTAL}" -le 0 ] || [ "${TOTAL}" -gt "${THRESHOLD}" ]; then
+            echo "RAM-Budget-Fehler: ${TOTAL} kB (Limit 150 MB)"
+            exit 1
+          fi

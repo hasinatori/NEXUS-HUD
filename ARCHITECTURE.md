@@ -1,6 +1,6 @@
 # NEXUS HUD — Architektur
 
-<!-- Zuletzt geändert: 2026-08-13 -->
+<!-- Zuletzt geändert: 2026-08-29 -->
 
 > Technische Spec zum Projekt aus `README.md`. Stand: **Phase 1** — Version
 > und Versionsschema siehe `VERSION.json` bzw. `docs/releasing.md`.
@@ -246,21 +246,28 @@ S-C wertet Events aus und stößt Aktionen an — Module bleiben entkoppelt.
 
 ## 8. RAM-Budget (Richtwert)
 
-Kein hartes Ziel: ~150 MB Gesamtverbrauch als Richtwert, erst in Phase 3 mit
-echten Messungen verifiziert. Schätzung je Runtime:
+Kein hartes Ziel: ~150 MB Gesamtverbrauch als Richtwert. Seit Phase 3 liegen
+echte Messungen der Linux-laubfähigen Module vor (Crostini/Debian, RSS nach
+10 s gegen den Bus, reproduzierbar per `scripts/measure-ram.sh`, Details in
+`docs/ram-budget.md`): **Summe ~90 MB** (bus ~11 MB, S-C ~10 MB, S-E ~10 MB,
+S-D/Node ~59 MB) — unter dem Richtwert.
 
-| Komponente | Ungefährer Speicher | Hinweis |
+Schätzung je Runtime (S-A/S-B nur unter Windows messbar):
+
+| Komponente | Gemessen/Schätzung | Hinweis |
 | :--- | :--- | :--- |
-| UI S-A (WinUI 3) | 40–80 MB | Frameless Overlay + Widgets |
-| S-B (Rust, Service) | 10–30 MB | Rust sparsamer als C# |
-| S-C (Go) | 10–15 MB | Go sehr leicht |
-| S-D (Node.js) | 40–80 MB | Node-Basis ist der größte Block |
-| S-E (Go/Python) | 10–30 MB | Python ~30 MB, Go ~10 MB |
-| **Summe** | **110–235 MB** | **Richtwert, nicht bindend** |
+| UI S-A (WinUI 3) | 40–80 MB (Schätzung) | Frameless Overlay + Widgets; Windows-only |
+| S-B (Rust, Service) | 10–30 MB (Schätzung) | Rust sparsamer als C#; Windows-only |
+| S-C (Go) | ~10 MB (gemessen) | Go sehr leicht |
+| S-D (Node.js) | ~59 MB (gemessen) | Node-Basis ist der größte Block |
+| S-E (Go) | ~10 MB (gemessen) | Go ~10 MB statt Python ~30 MB |
+| Bus `cmd/bus` (Go) | ~11 MB (gemessen) | Basis der Runtime |
+| **Summe (Linux-Runtime)** | **~90 MB (gemessen)** | **unter dem ~150-MB-Richtwert** |
 
 **Einordnung:** Der Verbrauch hängt am stärksten von S-D (Node.js) ab; ein
-hartes <150-MB-Ziel ist aufgegeben. Messungen erfolgen in Phase 3, ggf. mit
-Anpassungen (z. B. Metriken nur auf Anforderung statt Dauer-Polling).
+hartes <150-MB-Ziel bleibt Richtwert. Laufzeit-Optimierungen sind umgesetzt:
+Metriken per `cmd.metrics.set_interval` (0 = aus) abschaltbar, Git-Repos nur
+per `cmd.git.watch` auf Anforderung.
 
 ---
 
