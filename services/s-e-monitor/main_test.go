@@ -41,17 +41,17 @@ func TestNormalizeInterval(t *testing.T) {
 }
 
 func TestHandleMessageMetricsInterval(t *testing.T) {
-	ch := make(chan time.Duration, 4)
-	gitCh := make(chan string, 4)
+	metricsCh := make(chan time.Duration, 4)
+	gitCh := make(chan gitWatchRequest, 4)
 	raw, _ := json.Marshal(map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "cmd.metrics.set_interval",
 		"params":  map[string]any{"interval_ms": 1500},
 	})
-	handleMessage(raw, ch, gitCh)
+	handleMessage(raw, metricsCh, gitCh)
 
 	select {
-	case d := <-ch:
+	case d := <-metricsCh:
 		if d != 1500*time.Millisecond {
 			t.Fatalf("Intervall = %v, want 1.5s", d)
 		}
@@ -65,18 +65,21 @@ func TestHandleMessageMetricsInterval(t *testing.T) {
 
 func TestHandleMessageGitWatch(t *testing.T) {
 	metricsCh := make(chan time.Duration, 4)
-	gitCh := make(chan string, 4)
+	gitCh := make(chan gitWatchRequest, 4)
 	raw, _ := json.Marshal(map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "cmd.git.watch",
-		"params":  map[string]any{"path": "/tmp/repo"},
+		"params":  map[string]any{"path": "/tmp/repo", "interval_ms": 2500},
 	})
 	handleMessage(raw, metricsCh, gitCh)
 
 	select {
-	case p := <-gitCh:
-		if p != "/tmp/repo" {
-			t.Fatalf("Pfad = %q, want /tmp/repo", p)
+	case req := <-gitCh:
+		if req.Dir != "/tmp/repo" {
+			t.Fatalf("Pfad = %q, want /tmp/repo", req.Dir)
+		}
+		if req.Interval != 2500*time.Millisecond {
+			t.Fatalf("Intervall = %v, want 2.5s", req.Interval)
 		}
 	default:
 		t.Fatal("kein Pfad auf dem Git-Kanal")
@@ -86,9 +89,28 @@ func TestHandleMessageGitWatch(t *testing.T) {
 	}
 }
 
+func TestHandleMessageGitWatchDefaultInterval(t *testing.T) {
+	gitCh := make(chan gitWatchRequest, 4)
+	raw, _ := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"method":  "cmd.git.watch",
+		"params":  map[string]any{"path": "/tmp/repo"},
+	})
+	handleMessage(raw, nil, gitCh)
+
+	select {
+	case req := <-gitCh:
+		if req.Dir != "/tmp/repo" || req.Interval != 0 {
+			t.Fatalf("req = %+v, want /tmp/repo mit Standard-Intervall (0)", req)
+		}
+	default:
+		t.Fatal("kein Pfad auf dem Git-Kanal")
+	}
+}
+
 func TestHandleMessageIgnoresUnknown(t *testing.T) {
 	metricsCh := make(chan time.Duration, 4)
-	gitCh := make(chan string, 4)
+	gitCh := make(chan gitWatchRequest, 4)
 	raw, _ := json.Marshal(map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "event.media.state",
@@ -102,7 +124,7 @@ func TestHandleMessageIgnoresUnknown(t *testing.T) {
 
 func TestHandleMessageRejectsBadInterval(t *testing.T) {
 	metricsCh := make(chan time.Duration, 4)
-	gitCh := make(chan string, 4)
+	gitCh := make(chan gitWatchRequest, 4)
 	raw, _ := json.Marshal(map[string]any{
 		"jsonrpc": "2.0",
 		"method":  "cmd.metrics.set_interval",

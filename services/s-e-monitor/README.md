@@ -33,9 +33,10 @@ Erkennungs-Muster: `build succeeded/ok/passed`, `success`, `erfolgreich` bzw. `e
 Dateiwechsel (Projekt, Datei, Sprache, Pfad) als `event.ide.focus` gemeldet.
 
 Interaktive Commands: `cmd.metrics.set_interval` (params `interval_ms`, 0 = aus)
-ändert das Metriken-Intervall zur Laufzeit; `cmd.git.watch` (params `path`) fügt dem
-Monitoring weitere Git-Repos hinzu (jede Registrierung startet einen eigenen Poller).
-Unbekannte Nachrichten werden ignoriert.
+ändert das Metriken-Intervall zur Laufzeit; `cmd.git.watch` (params `path`,
+optional `interval_ms`) fügt dem Monitoring weitere Git-Repos hinzu (jede
+Registrierung startet einen eigenen Poller; `interval_ms` 0/fehlend = Standard
+`-git-interval`). Unbekannte Nachrichten werden ignoriert.
 
 ## Build & Run
 
@@ -78,6 +79,7 @@ go test ./services/s-e-monitor/...
 Sendet: `event.system.hello`, `event.system.metrics`, `event.git.status`,
 `event.build.succeeded`, `event.build.failed`, `event.ide.focus`.
 Empfängt: `cmd.metrics.set_interval` (Intervall für Systemmetriken dynamisch, in
-Millisekunden, `0` = aus), `cmd.git.watch` (überwacht zusätzlich ein Git-Repo per Pfad).
+Millisekunden, `0` = aus), `cmd.git.watch` (überwacht zusätzlich ein Git-Repo per Pfad,
+optional mit eigenem `interval_ms`).
 
 Deliverable: Ein Entwickler-Service, der den Arbeits- und Systemzustand in Echtzeit meldet.

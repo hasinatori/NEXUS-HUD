@@ -334,7 +334,7 @@ VALID = [
     {
         "jsonrpc": "2.0",
         "method": "cmd.git.watch",
-        "params": {"source": "S-A", "protocol_version": 1, "path": "/home/sam/NEXUS"},
+        "params": {"source": "S-A", "protocol_version": 1, "path": "/home/sam/NEXUS", "interval_ms": 3000},
     },
 ]
 

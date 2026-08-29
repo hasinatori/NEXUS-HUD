@@ -392,7 +392,8 @@
           "params": {
             "required": ["path"],
             "properties": {
-              "path": { "description": "Pfad des Git-Repos, das zusätzlich überwacht wird.", "type": "string" }
+              "path": { "description": "Pfad des Git-Repos, das zusätzlich überwacht wird.", "type": "string" },
+              "interval_ms": { "description": "Optional: Poll-Intervall für dieses Repo in Millisekunden (0/fehlend = Standard -git-interval).", "type": "integer", "minimum": 0 }
             }
           }
         }
