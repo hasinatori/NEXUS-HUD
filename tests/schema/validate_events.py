@@ -326,6 +326,16 @@ VALID = [
             "ts": "2026-08-28T10:00:00Z",
         },
     },
+    {
+        "jsonrpc": "2.0",
+        "method": "cmd.metrics.set_interval",
+        "params": {"source": "S-A", "protocol_version": 1, "interval_ms": 2000},
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "cmd.git.watch",
+        "params": {"source": "S-A", "protocol_version": 1, "path": "/home/sam/NEXUS"},
+    },
 ]
 
 INVALID = [
@@ -412,6 +422,16 @@ INVALID = [
         "jsonrpc": "2.0",
         "method": "event.ide.focus",
         "params": {"source": "S-E", "protocol_version": 1, "path": "/tmp/a.go", "ts": "2026-08-28T10:00:00Z"},  # filename fehlt
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "cmd.git.watch",
+        "params": {"source": "S-A", "protocol_version": 1},  # path fehlt
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "cmd.metrics.set_interval",
+        "params": {"source": "S-A", "protocol_version": 1, "interval_ms": -5},  # minimum 0
     },
 ]
 

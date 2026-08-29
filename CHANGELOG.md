@@ -11,6 +11,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- S-E interaktive Commands: `cmd.metrics.set_interval` (params `interval_ms`, 0 = aus) ändert das Metriken-Intervall zur Laufzeit; `cmd.git.watch` (params `path`) registriert zusätzliche Git-Repos mit eigenem Poller (`-git-interval`); Schema-Params für beide ergänzt, `events.schema.gen.go` regeneriert, Schema-Validierung jetzt 31 valid + 18 invalid; 5 neue Unit-Tests (main_test.go), E2E-Smoke verifiziert.
 - S-C Event-Regel-Trigger: `event.automation.rule.triggered` wird jetzt auch tatsächlich gesendet, wenn eine Event-Regel (exakt oder Wildcard) mit erfüllter IF-Bedingung eine Aktion auslöst (rule_name, event_method).
 - Bus-Methodenkatalog: `shared/bus/validate.go` leitet die erlaubten Methoden jetzt direkt aus dem eingebetteten Event-Schema ab (single source of truth) statt einer handgepflegten Liste — neue Schema-Methoden aus PRs #30/#31 (`event.call.*`, `event.automation.rule.triggered`, `cmd.media.set_activity`, `cmd.profile.switch`, `cmd.window.focus`, `cmd.call.*`) werden vom Bus wieder akzeptiert; neuer Test `TestMethodCatalogMatchesSchema`.
 - S-C Event-Regel-Aktion: es wird `action.cmd` (z. B. `cmd.media.toggle`) an den Ziel-Service gesendet statt fälschlich `action.target` als Methode.

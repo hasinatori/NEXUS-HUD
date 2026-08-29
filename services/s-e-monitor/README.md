@@ -2,7 +2,7 @@
 
 <!-- Zweck: Der Entwickler-Monitor: System-Metriken, Git-Status und Build-Ergebnisse
      werden als Events an den Bus gesendet. Keine UI — reine Datenerzeugung. -->
-<!-- Zuletzt geändert: 2026-08-28 -->
+<!-- Zuletzt geändert: 2026-08-29 -->
 
 **Stack:** `Go` (Build/Test auf Linux/Crostini und Windows; Metrik-Leser aktuell Linux via `/proc`)
 
@@ -31,6 +31,11 @@ Erkennungs-Muster: `build succeeded/ok/passed`, `success`, `erfolgreich` bzw. `e
 `fail(ed|ure)`, `fehler`. Der IDE-Fokus kommt aus der Focus-Datei der IDE-Bridge
 (`~/.nexus/ide-focus.json`, siehe `extensions/vscode-nexus`) und wird bei jedem
 Dateiwechsel (Projekt, Datei, Sprache, Pfad) als `event.ide.focus` gemeldet.
+
+Interaktive Commands: `cmd.metrics.set_interval` (params `interval_ms`, 0 = aus)
+ändert das Metriken-Intervall zur Laufzeit; `cmd.git.watch` (params `path`) fügt dem
+Monitoring weitere Git-Repos hinzu (jede Registrierung startet einen eigenen Poller).
+Unbekannte Nachrichten werden ignoriert.
 
 ## Build & Run
 
@@ -72,6 +77,7 @@ go test ./services/s-e-monitor/...
 
 Sendet: `event.system.hello`, `event.system.metrics`, `event.git.status`,
 `event.build.succeeded`, `event.build.failed`, `event.ide.focus`.
-Empfängt: `cmd.metrics.set_interval`, `cmd.git.watch` (geplant, Phase 3).
+Empfängt: `cmd.metrics.set_interval` (Intervall für Systemmetriken dynamisch, in
+Millisekunden, `0` = aus), `cmd.git.watch` (überwacht zusätzlich ein Git-Repo per Pfad).
 
 Deliverable: Ein Entwickler-Service, der den Arbeits- und Systemzustand in Echtzeit meldet.
