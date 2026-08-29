@@ -1,7 +1,7 @@
 # CONTRIBUTING.md
 
 <!-- Zweck: Regeln und Ablauf für Beiträge zum NEXUS HUD (Issues, PRs, Entwicklung). -->
-<!-- Zuletzt geändert: 2026-08-17 -->
+<!-- Zuletzt geändert: 2026-08-29 -->
 
 ## Projekt im Überblick
 NEXUS HUD ist ein Desktop-HUD für den 2. Monitor mit entkoppelter Modul-Architektur
@@ -11,7 +11,7 @@ NEXUS HUD ist ein Desktop-HUD für den 2. Monitor mit entkoppelter Modul-Archite
 
 Aktueller Stand: **Phase 2 abgeschlossen, Phase 3 teilweise umgesetzt** — IPC-Protokoll v1,
 Dev-Bus, alle Service-Implementierungen, IF-Bedingungen, Profil-Switching, VoIP-Anrufe
-und Tests für S-B/S-C/S-D stehen (36 IPC-Methoden). Versions-/Release-Prozess:
+und Tests für S-B/S-C/S-D stehen (39 IPC-Methoden). Versions-/Release-Prozess:
 siehe `docs/releasing.md`.
 
 ## Entwicklungsumgebung

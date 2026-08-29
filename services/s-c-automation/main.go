@@ -2,7 +2,7 @@
 // Task-Runner und IF-THIS-THEN-THAT-Regeln (JSON-Konfiguration).
 package main
 
-// Zuletzt geaendert: 2026-08-17
+// Zuletzt geaendert: 2026-08-29
 
 import (
 	"context"
@@ -174,7 +174,11 @@ func handleMessage(ctx context.Context, c *wsclient.Client, cfg Config, eventRul
 		}
 		if rule.Action.Cmd != "" && rule.Action.Target != "" {
 			log.Printf("[%s] Event-Regel %q: %s -> %s (%s)", serviceID, rule.Name, m.Method, rule.Action.Target, rule.Action.Cmd)
-			_ = c.Notify(ctx, rule.Action.Target, rule.Action.Params)
+			_ = c.Notify(ctx, "event.automation.rule.triggered", map[string]any{
+				"rule_name":    rule.Name,
+				"event_method": m.Method,
+			})
+			_ = c.Notify(ctx, rule.Action.Cmd, rule.Action.Params)
 		}
 	}
 }

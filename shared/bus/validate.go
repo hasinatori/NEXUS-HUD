@@ -1,6 +1,6 @@
 package bus
 
-// Zuletzt geändert: 2026-08-14
+// Zuletzt geändert: 2026-08-29
 
 import (
 	"encoding/json"
@@ -26,37 +26,25 @@ const (
 
 var (
 	sourcePattern = regexp.MustCompile(`^(S-[A-E]|bus)$`)
-	methodCatalog = map[string]bool{
-		"event.system.hello":        true,
-		"event.system.heartbeat":    true,
-		"event.system.metrics":      true,
-		"event.build.failed":        true,
-		"event.build.succeeded":     true,
-		"event.git.status":          true,
-		"event.media.state":         true,
-		"event.presence.changed":    true,
-		"event.profile.switched":    true,
-		"event.hotkey.triggered":    true,
-		"event.process.started":     true,
-		"event.window.moved":        true,
-		"event.automation.started":  true,
-		"event.automation.finished": true,
-		"event.file.changed":        true,
-		"event.ide.focus":           true,
-		"event.clipboard.changed":  true,
-		"cmd.media.toggle":          true,
-		"cmd.media.next":            true,
-		"cmd.media.volume":          true,
-		"cmd.app.launch":            true,
-		"cmd.hotkey.register":       true,
-		"cmd.window.move":           true,
-		"cmd.automation.run":        true,
-		"cmd.metrics.set_interval":  true,
-		"cmd.git.watch":             true,
-		"cmd.clipboard.set":         true,
-		"cmd.clipboard.get_history": true,
-		"error.protocol":            true,
-	}
+	// methodCatalog wird aus dem eingebetteten Event-Schema abgeleitet
+	// (single source of truth, siehe schema/events.schema.json).
+	methodCatalog = func() map[string]bool {
+		var doc struct {
+			Properties struct {
+				Method struct {
+					Enum []string `json:"enum"`
+				} `json:"method"`
+			} `json:"properties"`
+		}
+		if err := json.Unmarshal([]byte(eventsSchemaJSON), &doc); err != nil || len(doc.Properties.Method.Enum) == 0 {
+			return map[string]bool{}
+		}
+		catalog := make(map[string]bool, len(doc.Properties.Method.Enum))
+		for _, name := range doc.Properties.Method.Enum {
+			catalog[name] = true
+		}
+		return catalog
+	}()
 )
 
 var (
