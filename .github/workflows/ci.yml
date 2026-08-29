@@ -179,3 +179,20 @@ jobs:
       - name: Rust test
         working-directory: services/s-b-macro-launchpad
         run: cargo test
+
+  vscode:
+    name: VS Code-Erweiterung (IDE-Bridge)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: extensions/vscode-nexus/package-lock.json
+      - name: Abhängigkeiten installieren
+        working-directory: extensions/vscode-nexus
+        run: npm ci
+      - name: Tests (Fokus-Logik, headless)
+        working-directory: extensions/vscode-nexus
+        run: npm test

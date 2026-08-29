@@ -1,0 +1,36 @@
+{
+  "name": "nexus-hud-ide-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NEXUS HUD IDE-Bridge: meldet die aktive Datei an den S-E-Monitor (event.ide.focus).",
+  "publisher": "nexus-hud",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nexus.ide.ping",
+        "title": "NEXUS HUD: Aktiven Fokus anzeigen"
+      }
+    ],
+    "configuration": {
+      "title": "NEXUS HUD",
+      "properties": {
+        "nexus.focusFile": {
+          "type": "string",
+          "default": "",
+          "description": "Pfad der Focus-Datei, die der S-E-Monitor auswertet. Leer = ~/.nexus/ide-focus.json"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

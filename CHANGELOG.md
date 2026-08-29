@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- Zweck: Übersicht aller nennenswerten Änderungen, Format nach Keep a Changelog. -->
-<!-- Zuletzt geändert: 2026-08-17 -->
+<!-- Zuletzt geändert: 2026-08-28 -->
 
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
@@ -11,6 +11,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- S-E IDE-Fokus: `event.ide.focus` mit params `project`/`filename`/`language`/`path`/`ts` (Pflicht: filename, path, ts); S-E-Go-Package `idefocus` (Poll der Focus-Datei, Zustandswechsel, auto-`ts`), Flag `-ide-focus`; VS-Code-Erweiterung `extensions/vscode-nexus` (IDE-Bridge, schreibt `~/.nexus/ide-focus.json`) mit headless Tests (`src/focus.js`, kein vscode-Import) und neuem CI-Job „VS Code-Erweiterung (IDE-Bridge)"; Schema-Validierung: 29 valid + 16 invalid Payloads.
 - S-C Profile-System: `profiles.json` mit Context-Profilen (dev/gaming/afk), Hotkey-Bindings, Watcher-Overrides, Media-Einstellungen pro Profil; `ProfileManager` fuer Profil-Switching mit Validierung.
 - S-C Event-Regeln: `event_rules.json` fuer Cross-Module-Automatisierung; `EventRule` mit Wildcard-Matching (`event.build.*`), IF-Bedingungen und cmd-Aktionen (z.B. `event.build.failed` -> `cmd.media.toggle` -> S-D).
 - S-D Event-Reactions: `reactions.ts` reagiert auf `event.build.failed`, `event.build.succeeded`, `event.profile.switched` und passt Discord-Activity und Spotify-Lautstaerke an.

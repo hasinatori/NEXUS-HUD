@@ -313,6 +313,19 @@ VALID = [
             "name": "NEXUS HUD — Gaming",
         },
     },
+    {
+        "jsonrpc": "2.0",
+        "method": "event.ide.focus",
+        "params": {
+            "source": "S-E",
+            "protocol_version": 1,
+            "project": "NEXUS-HUD",
+            "filename": "main.go",
+            "language": "go",
+            "path": "/home/sam/NEXUS/services/s-e-monitor/main.go",
+            "ts": "2026-08-28T10:00:00Z",
+        },
+    },
 ]
 
 INVALID = [
@@ -394,6 +407,11 @@ INVALID = [
         "jsonrpc": "2.0",
         "method": "error.protocol",
         "params": {"source": "S-A", "protocol_version": 1, "message": "x"},  # code/ts fehlen
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "event.ide.focus",
+        "params": {"source": "S-E", "protocol_version": 1, "path": "/tmp/a.go", "ts": "2026-08-28T10:00:00Z"},  # filename fehlt
     },
 ]
 
