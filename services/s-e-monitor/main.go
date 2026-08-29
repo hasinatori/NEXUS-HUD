@@ -29,6 +29,12 @@ const (
 	defaultGitInterval = 15 * time.Second
 )
 
+// gitWatchRequest registriert ein zusätzlich zu überwachendes Git-Repo.
+type gitWatchRequest struct {
+	Dir      string
+	Interval time.Duration // 0 = Standard (-git-interval)
+}
+
 func main() {
 	port := flag.Int("port", wsclient.PortFromEnv(), "Port des lokalen WebSocket-Bus")
 	showVersion := flag.Bool("version", false, "Version ausgeben und beenden")
@@ -53,9 +59,9 @@ func main() {
 	c := wsclient.New(*port, source, serviceID, version.SEMonitor)
 
 	metricsChanges := make(chan time.Duration, 4)
-	gitWatchDirs := make(chan string, 4)
+	gitWatchReqs := make(chan gitWatchRequest, 4)
 	c.OnMessage = func(raw json.RawMessage) {
-		handleMessage(raw, metricsChanges, gitWatchDirs)
+		handleMessage(raw, metricsChanges, gitWatchReqs)
 	}
 
 	if err := c.Connect(ctx); err != nil {
@@ -64,7 +70,7 @@ func main() {
 	go c.RunHelloLoop(ctx)
 
 	go runMetrics(ctx, c, *metricsInterval, metricsChanges)
-	go runGitWatcher(ctx, c, *gitDir, *gitInterval, gitWatchDirs)
+	go runGitWatcher(ctx, c, *gitDir, *gitInterval, gitWatchReqs)
 	if *buildLog != "" {
 		go runBuildLog(ctx, c, *buildLog, *buildProject)
 	}
@@ -78,7 +84,7 @@ func main() {
 
 // handleMessage verarbeitet eingehende Commands (Empfängt: cmd.metrics.set_interval,
 // cmd.git.watch). Andere Nachrichten werden ignoriert.
-func handleMessage(raw json.RawMessage, metricsChanges chan<- time.Duration, gitWatchDirs chan<- string) {
+func handleMessage(raw json.RawMessage, metricsChanges chan<- time.Duration, gitWatchReqs chan<- gitWatchRequest) {
 	var m struct {
 		Method string         `json:"method"`
 		Params map[string]any `json:"params"`
@@ -96,14 +102,27 @@ func handleMessage(raw json.RawMessage, metricsChanges chan<- time.Duration, git
 			}
 		}
 	case "cmd.git.watch":
-		if dir, ok := m.Params["path"].(string); ok && dir != "" {
-			log.Printf("[%s] cmd.git.watch -> %s", serviceID, dir)
-			select {
-			case gitWatchDirs <- dir:
-			default:
-			}
+		dir, _ := m.Params["path"].(string)
+		if dir == "" {
+			return
+		}
+		req := gitWatchRequest{Dir: dir}
+		if ms, ok := metricsIntervalMs(m.Params["interval_ms"]); ok {
+			req.Interval = ms
+		}
+		log.Printf("[%s] cmd.git.watch -> %s (intervall %s)", serviceID, dir, intervalLabel(req.Interval))
+		select {
+		case gitWatchReqs <- req:
+		default:
 		}
 	}
+}
+
+func intervalLabel(d time.Duration) string {
+	if d == 0 {
+		return "Standard"
+	}
+	return d.String()
 }
 
 // metricsIntervalMs wandelt einen interval_ms-Parameter in eine Duration um
@@ -175,23 +194,27 @@ func normalizeInterval(d time.Duration) time.Duration {
 
 // runGitWatcher verwaltet alle überwachten Git-Repos (Initial aus -git-dir,
 // weitere via cmd.git.watch) und meldet den Status je Repo im Intervall.
-func runGitWatcher(ctx context.Context, c *wsclient.Client, dir string, interval time.Duration, add <-chan string) {
+func runGitWatcher(ctx context.Context, c *wsclient.Client, dir string, defInterval time.Duration, add <-chan gitWatchRequest) {
 	watched := map[string]bool{}
 	if dir != "" {
 		watched[dir] = true
-		go runGit(ctx, c, dir, interval)
+		go runGit(ctx, c, dir, defInterval)
 	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case d := <-add:
-			if d == "" || watched[d] {
+		case req := <-add:
+			if req.Dir == "" || watched[req.Dir] {
 				continue
 			}
-			watched[d] = true
-			log.Printf("[%s] Git-Repo zusätzlich überwacht: %s", serviceID, d)
-			go runGit(ctx, c, d, interval)
+			watched[req.Dir] = true
+			interval := req.Interval
+			if interval == 0 {
+				interval = defInterval
+			}
+			log.Printf("[%s] Git-Repo zusätzlich überwacht: %s (intervall %s)", serviceID, req.Dir, interval)
+			go runGit(ctx, c, req.Dir, interval)
 		}
 	}
 }
